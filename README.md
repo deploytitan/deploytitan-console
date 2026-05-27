@@ -1,36 +1,33 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# DeployTitan Console
 
-## Getting Started
+Standalone Next.js console for DeployTitan, intended to run on Vercel while the original monorepo continues to own backend services and private packages.
 
-First, run the development server:
+## Development
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
+pnpm install
 pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+The local console runs on `http://localhost:8080` so the backend API can keep its default `http://localhost:3000` port. The app reads browser-safe values from `NEXT_PUBLIC_*` variables. For local backend proxying, set `API_PROXY_ORIGIN` to the DeployTitan API origin; Next will rewrite `/auth/*`, `/orgs/*`, `/github/*`, `/pull-requests/*`, `/billing/*`, and `/onboarding/signup` to that origin.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## WorkOS Auth
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+WorkOS is configured on the backend API. Keep `WORKOS_API_KEY`, `WORKOS_CLIENT_ID`, `WORKOS_COOKIE_PASSWORD`, and `WORKOS_REDIRECT_URI` out of this frontend repo and set them in the backend runtime environment.
 
-## Learn More
+For Vercel, configure the console with:
 
-To learn more about Next.js, take a look at the following resources:
+```bash
+NEXT_PUBLIC_API_URL=
+API_PROXY_ORIGIN=https://api.deploytitan.com
+NEXT_PUBLIC_ZERO_SERVER=https://zero.deploytitan.com
+NEXT_PUBLIC_DEV_BYPASS_AUTH=false
+```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+The backend `WORKOS_REDIRECT_URI` should point back to the console callback route, for example:
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+```bash
+WORKOS_REDIRECT_URI=https://console.deploytitan.com/api/auth/callback
+```
 
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+`/login` and `/signup` start the backend `/auth/login` flow, `/api/auth/callback` exchanges the WorkOS code through `/auth/callback`, and `/logout` clears both backend and browser session state.

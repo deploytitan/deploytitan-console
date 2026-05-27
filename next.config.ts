@@ -1,7 +1,28 @@
-import type { NextConfig } from "next";
+import type { NextConfig } from 'next'
+
+const apiOrigin = process.env.API_PROXY_ORIGIN ?? process.env.NEXT_PUBLIC_API_URL
+
+const apiRewriteSources = [
+  '/auth/login',
+  '/auth/logout',
+  '/auth/me',
+  '/auth/refresh',
+  '/billing/:path*',
+  '/github/:path*',
+  '/orgs/:path*',
+  '/pull-requests/:path*',
+  '/onboarding/signup',
+]
 
 const nextConfig: NextConfig = {
-  /* config options here */
-};
+  async rewrites() {
+    if (!apiOrigin) return []
 
-export default nextConfig;
+    return apiRewriteSources.map((source) => ({
+      source,
+      destination: `${apiOrigin}${source}`,
+    }))
+  },
+}
+
+export default nextConfig

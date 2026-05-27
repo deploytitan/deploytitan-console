@@ -1,0 +1,679 @@
+@import 'tailwindcss';
+@import '@deploytitan/design-tokens';
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
+@import "@fontsource-variable/geist";
+
+@custom-variant dark (&:is(.dark *));
+
+/* ==========================================================================
+   Console app-specific styles
+   Anything here should be unique to the console; shared patterns belong in
+   @deploytitan/design-tokens.
+   ========================================================================== */
+
+/* fadeUp — used by console onboarding, empty-state, and row-reveal animations */
+@keyframes fadeUp {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* fadeIn — opacity-only reveal for elements that shouldn't move */
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+/* slideDown — expand reveal for inline forms and expanded rows */
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* pulse-dot — live status indicator on active deployments */
+@keyframes pulse-dot {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.35; }
+}
+
+/* bounce-anim — used by console scroll indicators */
+@keyframes bounce-anim {
+  0%, 100% { transform: translateY(0); }
+  50%       { transform: translateY(6px); }
+}
+
+/* ==========================================================================
+   Console motion utilities
+   All durations respect prefers-reduced-motion via the global rule in
+   @deploytitan/design-tokens. Easing: cubic-bezier(0.22, 1, 0.36, 1) = ease-out-quart.
+   ========================================================================== */
+
+.animate-fade-up {
+  animation: fadeUp 200ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.animate-fade-in {
+  animation: fadeIn 150ms ease-out both;
+}
+
+.animate-slide-down {
+  animation: slideDown 180ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.animate-pulse-dot {
+  animation: pulse-dot 2s ease-in-out infinite;
+}
+
+/* Staggered list children: apply to parent, children get delay via nth-child */
+.animate-stagger > * {
+  animation: fadeUp 200ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+.animate-stagger > *:nth-child(1) { animation-delay: 0ms; }
+.animate-stagger > *:nth-child(2) { animation-delay: 40ms; }
+.animate-stagger > *:nth-child(3) { animation-delay: 80ms; }
+.animate-stagger > *:nth-child(4) { animation-delay: 120ms; }
+.animate-stagger > *:nth-child(5) { animation-delay: 160ms; }
+.animate-stagger > *:nth-child(n+6) { animation-delay: 200ms; }
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-fade-up,
+  .animate-fade-in,
+  .animate-slide-down,
+  .animate-pulse-dot,
+  .animate-stagger > * {
+    animation: none !important;
+    opacity: 1 !important;
+    transform: none !important;
+  }
+}
+
+/* login-scan-line — vertical amber sweep on the login page background.
+   Uses a CSS class (not inline style) so prefers-reduced-motion suppresses it
+   via the global rule in @deploytitan/design-tokens/components.css. */
+.login-scan-line {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 1px;
+  opacity: 0.1;
+  background: linear-gradient(to bottom, transparent, var(--color-gold), transparent);
+  animation: scan-line 10s linear infinite;
+}
+
+/* gold-shimmer — console hero motif; one use per page max */
+.gold-shimmer {
+  background: linear-gradient(
+    90deg,
+    var(--color-gold-dark) 0%,
+    var(--color-gold-light) 40%,
+    var(--color-gold-dark) 60%,
+    var(--color-gold) 100%
+  );
+  background-size: 200% auto;
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: gold-shimmer 4s linear infinite;
+}
+
+@theme inline {
+  --font-heading: var(--font-sans);
+  --font-sans: 'Geist Variable', sans-serif;
+  --color-sidebar-ring: var(--sidebar-ring);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar: var(--sidebar);
+  --color-chart-5: var(--chart-5);
+  --color-chart-4: var(--chart-4);
+  --color-chart-3: var(--chart-3);
+  --color-chart-2: var(--chart-2);
+  --color-chart-1: var(--chart-1);
+  --color-ring: var(--ring);
+  --color-input: var(--input);
+  --color-border: var(--border);
+  --color-destructive: var(--destructive);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-accent: var(--accent);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-muted: var(--muted);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-secondary: var(--secondary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-primary: var(--primary);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-popover: var(--popover);
+  --color-card-foreground: var(--card-foreground);
+  --color-card: var(--card);
+  --color-foreground: var(--foreground);
+  --color-background: var(--background);
+  --radius-sm: calc(var(--radius) * 0.6);
+  --radius-md: calc(var(--radius) * 0.8);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) * 1.4);
+  --radius-2xl: calc(var(--radius) * 1.8);
+  --radius-3xl: calc(var(--radius) * 2.2);
+  --radius-4xl: calc(var(--radius) * 2.6);
+}
+
+/* ==========================================================================
+   shadcn ↔ DeployTitan token bridge
+   Maps shadcn semantic variables to DeployTitan design tokens so shadcn
+   components render in the Instrument Panel language without overriding the
+   existing token system. The radius is deliberately overridden to 2px (sharp).
+   ========================================================================== */
+:root {
+  /* Surface / background */
+  --background: #fafaf9;
+  --foreground: #1a1512;
+
+  /* Cards / popovers sit on surface-alt for subtle lift */
+  --card: #fafaf9;
+  --card-foreground: #1a1512;
+  --popover: #fafaf9;
+  --popover-foreground: #1a1512;
+
+  /* Primary: ink fill, surface text — same as DeployTitan button-primary */
+  --primary: #1a1512;
+  --primary-foreground: #fafaf9;
+
+  /* Secondary: surface-alt */
+  --secondary: #f5f4f1;
+  --secondary-foreground: #1a1512;
+
+  /* Muted: the quaternary ink layer */
+  --muted: #f5f4f1;
+  --muted-foreground: #6b6059;
+
+  /* Accent: amber muted fill, amber-tinged text */
+  --accent: rgba(201, 168, 76, 0.10);
+  --accent-foreground: #a68a3e;
+
+  /* Destructive: danger signal */
+  --destructive: #ef4444;
+
+  /* Borders & inputs: fine line */
+  --border: #e5e2dc;
+  --input: #e5e2dc;
+
+  /* Ring: amber for focus, matching DeployTitan focus state */
+  --ring: #c9a84c;
+
+  /* Charts: use signal colors */
+  --chart-1: #3b82f6;
+  --chart-2: #22c55e;
+  --chart-3: #f59e0b;
+  --chart-4: #ef4444;
+  --chart-5: #c9a84c;
+
+  /* Console UX radius: 4px — precise but approachable.
+     Retains engineered character without clinical sharpness. */
+  --radius: 0.25rem;
+
+  /* Sidebar: surface-alt background, surface-step hover/active (Vercel-style tint, no amber fill) */
+  --sidebar: #f5f4f1;
+  --sidebar-foreground: #1a1512;
+  --sidebar-primary: #1a1512;
+  --sidebar-primary-foreground: #fafaf9;
+  --sidebar-accent: #e5e2dc;
+  --sidebar-accent-foreground: #1a1512;
+  --sidebar-border: #e5e2dc;
+  --sidebar-ring: #c9a84c;
+}
+
+.dark {
+  --background: #0d0c0a;
+  --foreground: #f5f4f1;
+
+  --card: #161512;
+  --card-foreground: #f5f4f1;
+  --popover: #161512;
+  --popover-foreground: #f5f4f1;
+
+  --primary: #f5f4f1;
+  --primary-foreground: #0d0c0a;
+
+  --secondary: #2a2825;
+  --secondary-foreground: #f5f4f1;
+
+  --muted: #2a2825;
+  --muted-foreground: #8a8078;
+
+  --accent: rgba(212, 180, 84, 0.10);
+  --accent-foreground: #d4b454;
+
+  --destructive: #f87171;
+
+  --border: #2a2825;
+  --input: #2a2825;
+
+  --ring: #d4b454;
+
+  --chart-1: #60a5fa;
+  --chart-2: #4ade80;
+  --chart-3: #fbbf24;
+  --chart-4: #f87171;
+  --chart-5: #d4b454;
+
+  --sidebar: #161512;
+  --sidebar-foreground: #f5f4f1;
+  --sidebar-primary: #d4b454;
+  --sidebar-primary-foreground: #0d0c0a;
+  --sidebar-accent: #2a2825;
+  --sidebar-accent-foreground: #f5f4f1;
+  --sidebar-border: #2a2825;
+  --sidebar-ring: #d4b454;
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+  html {
+    @apply font-sans;
+  }
+}
+
+.logo-theme-fade {
+    transition:
+        opacity 0.45s cubic-bezier(0.22, 1, 0.36, 1),
+        transform 0.45s cubic-bezier(0.22, 1, 0.36, 1);
+    transform: translateY(0) scale(1);
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .logo-theme-fade {
+        transition: none;
+    }
+}
+
+/* ==========================================================================
+   Sonner toast overrides — DeployTitan Instrument Panel skin
+   ========================================================================== */
+
+/* Sonner injects its own [data-sonner-toaster] element; we override vars there */
+[data-sonner-toaster] {
+  --width: 340px;
+  font-family: 'JetBrains Mono', monospace;
+}
+
+/* Base toast shell */
+.dt-toast {
+  border-radius: 2px !important;
+  background: var(--color-surface, #fafaf9) !important;
+  border: 1px solid var(--color-line, #e5e2dc) !important;
+  color: var(--color-ink, #1a1512) !important;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06), 0 0 0 1px rgba(26, 21, 18, 0.04) !important;
+}
+
+.dark .dt-toast {
+  background: var(--color-dark-surface-alt, #161512) !important;
+  border-color: var(--color-dark-line, #2a2825) !important;
+  color: var(--color-dark-ink, #f5f4f1) !important;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.3), 0 0 0 1px rgba(255, 255, 255, 0.04) !important;
+}
+
+/* Error variant */
+.dt-toast--error {
+  border-color: rgba(239, 68, 68, 0.25) !important;
+  background: rgba(239, 68, 68, 0.04) !important;
+}
+
+.dark .dt-toast--error {
+  border-color: rgba(248, 113, 113, 0.2) !important;
+  background: rgba(248, 113, 113, 0.06) !important;
+}
+
+/* Success variant */
+.dt-toast--success {
+  border-color: rgba(34, 197, 94, 0.25) !important;
+  background: rgba(34, 197, 94, 0.04) !important;
+}
+
+.dark .dt-toast--success {
+  border-color: rgba(74, 222, 128, 0.2) !important;
+  background: rgba(74, 222, 128, 0.06) !important;
+}
+
+/* Warning variant */
+.dt-toast--warning {
+  border-color: rgba(245, 158, 11, 0.25) !important;
+  background: rgba(245, 158, 11, 0.04) !important;
+}
+
+.dark .dt-toast--warning {
+  border-color: rgba(251, 191, 36, 0.2) !important;
+  background: rgba(251, 191, 36, 0.06) !important;
+}
+
+/* Info variant */
+.dt-toast--info {
+  border-color: rgba(59, 130, 246, 0.25) !important;
+  background: rgba(59, 130, 246, 0.04) !important;
+}
+
+.dark .dt-toast--info {
+  border-color: rgba(96, 165, 250, 0.2) !important;
+  background: rgba(96, 165, 250, 0.06) !important;
+}
+
+/* Entrance animation — use existing fadeUp */
+[data-sonner-toast] {
+  animation: fadeUp 150ms cubic-bezier(0.22, 1, 0.36, 1) both !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  [data-sonner-toast] {
+    animation: none !important;
+  }
+}
+
+/* ==========================================================================
+   WorkOS OrganizationSwitcher — DeployTitan Instrument Panel skin
+   ========================================================================== */
+
+/* ── Root wrapper ─────────────────────────────────────────────────────────── */
+/* The trigger lives here; the dropdown portal renders outside this element.  */
+.woswidgets-root {
+  width: 100% !important;
+  display: block !important;
+  /* Font for trigger + loading/error states */
+  --default-font-family: 'Geist Variable', sans-serif !important;
+  /* Shrink Radix size-2 button height (--space-6) from 32px to 28px */
+  --space-6: 28px !important;
+  /* Radius */
+  --radius-2: 3px !important;
+  --radius-3: 4px !important;
+  --radius-4: 4px !important;
+  /* Remap gray tokens so trigger surface/text match the sidebar */
+  --gray-a3: color-mix(in srgb, var(--sidebar-foreground, #1a1512) 7%, transparent) !important;
+  --gray-a4: color-mix(in srgb, var(--sidebar-foreground, #1a1512) 11%, transparent) !important;
+  --gray-a7: color-mix(in srgb, var(--sidebar-foreground, #1a1512) 22%, transparent) !important;
+  --gray-11: var(--sidebar-foreground, #1a1512) !important;
+  --gray-12: var(--sidebar-foreground, #1a1512) !important;
+}
+
+.dark .woswidgets-root {
+  --gray-a3: color-mix(in srgb, var(--sidebar-foreground, #f5f4f1) 7%, transparent) !important;
+  --gray-a4: color-mix(in srgb, var(--sidebar-foreground, #f5f4f1) 11%, transparent) !important;
+  --gray-a7: color-mix(in srgb, var(--sidebar-foreground, #f5f4f1) 22%, transparent) !important;
+  --gray-11: var(--sidebar-foreground, #f5f4f1) !important;
+  --gray-12: var(--sidebar-foreground, #f5f4f1) !important;
+}
+
+/* ── Trigger button ───────────────────────────────────────────────────────── */
+.OrganizationSwitcherTrigger {
+  width: 100% !important;
+  display: flex !important;
+  align-items: center !important;
+  padding: 0.3125rem 0.5rem !important;
+  border-radius: 4px !important;
+  font-size: 0.8125rem !important;
+  line-height: 1.25rem !important;
+  font-family: 'Geist Variable', sans-serif !important;
+  font-weight: 500 !important;
+  color: var(--sidebar-foreground, #1a1512) !important;
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  outline: none !important;
+  cursor: pointer !important;
+  transition: background 120ms ease !important;
+}
+
+.OrganizationSwitcherTrigger:hover {
+  background: var(--sidebar-accent, #e5e2dc) !important;
+}
+
+.dark .OrganizationSwitcherTrigger {
+  color: var(--sidebar-foreground, #f5f4f1) !important;
+}
+
+.dark .OrganizationSwitcherTrigger:hover {
+  background: var(--sidebar-accent, #2a2825) !important;
+}
+
+/* Inner flex row — no wrapping, truncate org name */
+.OrganizationSwitcherTrigger > div {
+  display: flex !important;
+  flex-wrap: nowrap !important;
+  align-items: center !important;
+  width: 100% !important;
+  min-width: 0 !important;
+  overflow: hidden !important;
+  gap: 0.375rem !important;
+}
+
+/* Org name */
+.OrganizationSwitcherTrigger .rt-truncate {
+  flex: 1 1 0% !important;
+  min-width: 0 !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+  /*font-size: 0.8125rem !important;*/
+  /*font-weight: 500 !important;*/
+  /*line-height: 1.25rem !important;*/
+  text-align: left !important;
+  @apply truncate font-mono text-[12px] tracking-wide;
+}
+
+/* Chevron */
+.OrganizationSwitcherTrigger svg {
+  width: 9px !important;
+  height: 9px !important;
+  flex-shrink: 0 !important;
+  opacity: 0.4 !important;
+}
+
+/* Loading state */
+[data-woswidgets-widget-state="loading"].OrganizationSwitcherTrigger {
+  cursor: default !important;
+  pointer-events: none !important;
+  opacity: 0.7 !important;
+}
+
+/* Error state */
+[data-woswidgets-widget-state="error"].OrganizationSwitcherTrigger {
+  cursor: default !important;
+  pointer-events: none !important;
+  opacity: 0.5 !important;
+}
+
+/* Skeleton pill */
+.OrganizationSwitcherTrigger .rt-Skeleton,
+.OrganizationSwitcherTrigger .woswidgets-skeleton {
+  border-radius: 3px !important;
+  height: 0.6875rem !important;
+  width: 4.5rem !important;
+}
+
+/* ── Dropdown panel (renders in a portal — target by class directly) ──────── */
+.woswidgets-dropdown {
+  width: var(--radix-dropdown-menu-trigger-width) !important;
+  min-width: var(--radix-dropdown-menu-trigger-width) !important;
+  background: var(--popover, #fafaf9) !important;
+  border: 1px solid var(--border, #e5e2dc) !important;
+  border-radius: 4px !important;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08), 0 1px 4px rgba(0, 0, 0, 0.04) !important;
+  padding: 0.25rem !important;
+  font-family: 'Geist Variable', sans-serif !important;
+  /* Override Radix Themes' own shadow-5 */
+  --shadow-5: none !important;
+}
+
+.dark .woswidgets-dropdown {
+  background: var(--popover, #161512) !important;
+  border-color: var(--border, #2a2825) !important;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.45), 0 1px 4px rgba(0, 0, 0, 0.25) !important;
+}
+
+/* "Organizations" label */
+.woswidgets-dropdown .rt-BaseMenuLabel {
+  padding: 0.25rem 0.5rem 0.125rem !important;
+  height: auto !important;
+  /*font-size: 0.6875rem !important;*/
+  /*font-weight: 600 !important;*/
+  /*letter-spacing: 0.06em !important;*/
+  text-transform: uppercase !important;
+  color: var(--muted-foreground, #6b6059) !important;
+  /*font-family: 'Geist Variable', sans-serif !important;*/
+  /*line-height: 1.5 !important;*/
+  @apply truncate font-display text-[8px] tracking-widest;
+}
+
+/* ── Org menu items ───────────────────────────────────────────────────────── */
+.woswidgets-menu-item {
+  border-radius: 3px !important;
+  /* Reset Radix's --min-width / --max-width custom props used by rt-r-min-w/max-w */
+  --min-width: 0px !important;
+  --max-width: none !important;
+  width: 100% !important;
+  min-width: 0 !important;
+  max-width: 100% !important;
+  box-sizing: border-box !important;
+  /* Padding — override rt-r-pr-2 (right-only) with uniform padding */
+  padding: 0.375rem 0.5rem !important;
+  font-size: 0.8125rem !important;
+  line-height: 1.25rem !important;
+  font-weight: 400 !important;
+  font-family: 'Geist Variable', sans-serif !important;
+  color: var(--foreground, #1a1512) !important;
+  cursor: pointer !important;
+  transition: background 100ms ease !important;
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+.dark .woswidgets-menu-item {
+  color: var(--foreground, #f5f4f1) !important;
+}
+
+.woswidgets-menu-item[data-highlighted] {
+  background: rgba(201, 168, 76, 0.10) !important;
+  color: var(--foreground, #1a1512) !important;
+}
+
+.dark .woswidgets-menu-item[data-highlighted] {
+  background: rgba(212, 180, 84, 0.10) !important;
+  color: var(--foreground, #f5f4f1) !important;
+}
+
+/* Inner flex row — no wrap, keep name and icon on one line */
+.woswidgets-menu-item > div {
+  display: flex !important;
+  flex-direction: row !important;
+  flex-wrap: nowrap !important;
+  align-items: center !important;
+  width: 100% !important;
+  min-width: 0 !important;
+  gap: 0.375rem !important;
+}
+
+/* Org name text */
+.woswidgets-menu-item .rt-truncate {
+  flex: 1 1 0% !important;
+  min-width: 0 !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+  /*font-size: 0.8125rem !important;*/
+  /*font-family: 'Geist Variable', sans-serif !important;*/
+  @apply truncate font-mono text-[12px] tracking-wide;
+}
+
+/* Icon container (checkmark or transparent spacer) */
+.woswidgets-menu-item > div > div:last-child {
+  flex-shrink: 0 !important;
+  width: 14px !important;
+  height: 14px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+}
+
+/* Checkmark SVG — amber */
+.woswidgets-menu-item svg {
+  width: 14px !important;
+  height: 14px !important;
+  flex-shrink: 0 !important;
+  color: var(--ring, #c9a84c) !important;
+}
+
+.dark .woswidgets-menu-item svg {
+  color: var(--ring, #d4b454) !important;
+}
+
+/* Strip any leftover Radix focus ring on items */
+.woswidgets-dropdown [role="menuitem"]:focus,
+.woswidgets-dropdown [role="menuitem"][data-highlighted] {
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+/* ==========================================================================
+   Page transition — View Transitions API
+   The router triggers ::view-transition-* pseudo-elements when
+   defaultViewTransition: true. We override the default cross-fade with a
+   subtle directional slide so navigation feels fluid rather than abrupt.
+   Falls back gracefully in browsers without View Transitions support.
+   ========================================================================== */
+
+@media (prefers-reduced-motion: no-preference) {
+  /* Outgoing page: fade + slight upward drift */
+  ::view-transition-old(root) {
+    animation: page-exit 200ms cubic-bezier(0.4, 0, 1, 1) both;
+  }
+
+  /* Incoming page: fade in from slightly below */
+  ::view-transition-new(root) {
+    animation: page-enter 280ms cubic-bezier(0.0, 0, 0.2, 1) both;
+  }
+
+  /* Sidebar is shared across all console routes — freeze it in place so it
+     doesn't flicker or animate during page transitions. */
+  ::view-transition-old(console-sidebar),
+  ::view-transition-new(console-sidebar) {
+    animation: none;
+  }
+
+  @keyframes page-exit {
+    from {
+      opacity: 1;
+      transform: translateY(0);
+    }
+    to {
+      opacity: 0;
+      transform: translateY(-6px);
+    }
+  }
+
+  @keyframes page-enter {
+    from {
+      opacity: 0;
+      transform: translateY(8px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+}
