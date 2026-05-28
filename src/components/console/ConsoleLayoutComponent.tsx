@@ -1,6 +1,7 @@
 "use client";
 
 import { useConnectionToast } from "@/hooks/useConnectionToast";
+import { ConsoleSidebar } from "./ConsoleSidebar";
 
 export function ConsoleLayoutComponent({
   children,
@@ -9,5 +10,10 @@ export function ConsoleLayoutComponent({
 }) {
   useConnectionToast();
 
-  return <div>{children}</div>;
+  return (
+    <div className="flex min-h-screen bg-background">
+      <ConsoleSidebar />
+      <main className="flex-1 min-w-0 ml-[220px]">{children}</main>
+    </div>
+  );
 }

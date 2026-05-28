@@ -1,7 +1,6 @@
 "use client";
 
 import { ReactNode, Suspense, useRef } from "react";
-import { ConnectionStatus } from "@/components/console/ConnectionStatus";
 import {
   AuthKitProvider,
   useAccessToken,
@@ -46,10 +45,6 @@ function ZeroWithAuth({ children }: { children: ReactNode }) {
 export default function ProtectedLayout({ children }: { children: ReactNode }) {
   return (
     <ZeroWithAuth>
-      <div className="fixed top-0 right-0 z-50 mx-4 my-2 hover:opacity-30 transition-all duration-200 ease-in-out">
-        <ConnectionStatus />
-      </div>
-
       <div className="protected-layout">{children}</div>
     </ZeroWithAuth>
   );

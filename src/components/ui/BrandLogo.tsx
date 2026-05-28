@@ -45,7 +45,7 @@ export function BrandLogo({
         alt=""
         aria-hidden="true"
         fetchPriority={priority ? 'high' : 'auto'}
-        className={`absolute inset-0 h-full w-full${transitionClass}`}
+        className={`absolute inset-0 h-full w-full ${transitionClass}`}
         style={{ opacity: showLight ? 1 : 0 }}
       />
       <img
@@ -53,7 +53,7 @@ export function BrandLogo({
         alt=""
         aria-hidden="true"
         fetchPriority={priority ? 'high' : 'auto'}
-        className={`absolute inset-0 h-full w-full${transitionClass}`}
+        className={`absolute inset-0 h-full w-full ${transitionClass}`}
         style={{ opacity: showLight ? 0 : 1 }}
       />
     </span>
