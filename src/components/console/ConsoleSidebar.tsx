@@ -22,6 +22,7 @@ import {
   SlidersHorizontal,
   Settings,
   Zap,
+  ChevronLeft,
   type LucideIcon,
 } from "lucide-react";
 import { queries } from "@deploytitan/zero-schema";
@@ -46,7 +47,7 @@ type NavItem =
 
 const generateProjectNav = (orgId: string, projectId: string): NavItem[] => [
   {
-    label: "Workflows",
+    label: "Project",
     type: "group",
     items: [
       {
@@ -55,24 +56,18 @@ const generateProjectNav = (orgId: string, projectId: string): NavItem[] => [
         icon: LayoutGrid,
         href: `/orgs/${orgId}/projects/${projectId}/overview`,
       },
+      {
+        type: "item",
+        label: "Policies",
+        icon: Shield,
+        href: `/orgs/${orgId}/projects/${projectId}/policies`,
+      },
       // { label: "Rollouts", href: "rollouts", icon: Rocket },
       // { label: "Ledger", href: "ledger", icon: ScrollText },
       // { label: "Observatory", href: "observatory", icon: Activity },
       // { label: "Pull Requests", href: "pull-requests", icon: GitPullRequest },
       // { label: "Timeline", href: "timeline", icon: History },
       // { label: "Rollback", href: "rollback", icon: RotateCcw },
-    ],
-  },
-  {
-    label: "Project",
-    type: "group",
-    items: [
-      {
-        type: "item",
-        label: "Overview",
-        icon: LayoutGrid,
-        href: `/orgs/${orgId}/projects/${projectId}/policies`,
-      },
       // { label: "Foresight", href: "foresight", icon: Zap, badge: "BETA" },
       // { label: "Integrate", href: "integrate", icon: Plug2 },
       // { label: "Configure", href: "configure", icon: SlidersHorizontal },
@@ -239,6 +234,15 @@ export function ConsoleSidebar() {
 
       {/* Nav — scrollable */}
       <nav className="flex-1 overflow-y-auto py-3 px-2 space-y-4">
+        {projectId && (
+          <Link
+            href={`/orgs/${orgId}/projects`}
+            className="flex items-center gap-1.5 px-3 py-1.5 text-[12px] text-sidebar-foreground/50 hover:text-sidebar-foreground transition-colors duration-100 rounded-[4px] hover:bg-sidebar-accent/70"
+          >
+            <ChevronLeft className="size-3.5 shrink-0" strokeWidth={1.75} />
+            All Projects
+          </Link>
+        )}
         <NavGroupList navList={navList} />
       </nav>
 

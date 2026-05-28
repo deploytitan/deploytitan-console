@@ -3,8 +3,7 @@
 import { useState, useTransition } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { useQuery } from "@rocicorp/zero/react";
-import { createBuilder } from "@rocicorp/zero";
-import { schema } from "@deploytitan/zero-schema";
+import { queries } from "@deploytitan/zero-schema";
 import Link from "next/link";
 import { Plus, ArrowRight, FolderGit2, AlertCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -18,8 +17,6 @@ import {
 } from "@/components/ui/dialog";
 import { useCreateProject } from "@/hooks/useCreateProject";
 import { cn } from "@/lib/utils";
-
-const zql = createBuilder(schema);
 
 function formatDate(ts: number | null): string {
   if (!ts) return "";
@@ -227,9 +224,7 @@ export default function ProjectsPage() {
   const params = useParams();
   const orgId = params.orgId as string;
 
-  const [projects, details] = useQuery(
-    zql.projects.where("orgId", "=", orgId).orderBy("name", "asc"),
-  );
+  const [projects, details] = useQuery(queries.projectsByOrgId({ orgId }));
 
   const [dialogOpen, setDialogOpen] = useState(false);
 
