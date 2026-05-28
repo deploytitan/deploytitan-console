@@ -1,10 +1,12 @@
-import type { ReactNode } from "react";
 import { ConsoleLayoutComponent } from "@/components/console/ConsoleLayoutComponent";
+import { ReactNode } from "react";
+import { withAuth } from "@workos-inc/authkit-nextjs";
 
-// All console pages require authentication and real-time data
-// Disable static generation for this route segment
-export const dynamic = "force-dynamic";
-
-export default function ConsoleLayout({ children }: { children: ReactNode }) {
+export default async function ConsoleLayout({
+  children,
+}: {
+  children: ReactNode;
+}) {
+  await withAuth({ ensureSignedIn: true });
   return <ConsoleLayoutComponent>{children}</ConsoleLayoutComponent>;
 }

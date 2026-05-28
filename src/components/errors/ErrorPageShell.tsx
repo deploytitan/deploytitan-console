@@ -10,12 +10,12 @@
  */
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { Link, useLocation } from "@/lib/navigation";
 
 import { ThemeToggle } from "@/components/ui/ThemeToggle";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { useTheme } from "@/hooks/useTheme";
 import { useAccessToken, useAuth } from "@workos-inc/authkit-nextjs/components";
+import Link from "next/dist/client/link";
 
 /* ═══════════════════════════════════════════════════════════════════════════
    TYPES
@@ -569,7 +569,7 @@ function SignalPage({
           <div className="space-y-3">
             {primaryAction ? (
               <Link
-                to={primaryAction.to}
+                href={primaryAction.to}
                 className={buttonVariants({ variant: "outline", size: "md" })}
                 style={{
                   borderColor: `${amber}4d`,
@@ -950,7 +950,7 @@ function IncidentReportModal({
               <div className="space-y-3">
                 {primaryAction ? (
                   <Link
-                    to={primaryAction.to}
+                    href={primaryAction.to}
                     className={buttonVariants({
                       variant: "primary",
                       size: "md",
@@ -1008,7 +1008,7 @@ export function PageHeader({ dark = false }: { dark?: boolean }) {
   return (
     <header className="absolute inset-x-0 top-0 z-20 flex items-center justify-between px-6 py-5 sm:px-8">
       <Link
-        to="/"
+        href="/"
         className="inline-flex items-center gap-3 text-sm transition-opacity hover:opacity-80"
         style={{ color: dark ? "#c8c2b8" : "var(--color-ink-secondary)" }}
       >
@@ -1071,7 +1071,6 @@ export function ErrorPageShell({
   path: pathProp,
   errorMessage,
 }: ErrorPageShellProps) {
-  const location = useLocation();
   const auth = useAuth();
   const { loading } = useAccessToken();
   const isAuthenticated = !!auth.user;

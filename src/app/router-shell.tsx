@@ -36,37 +36,6 @@ export const queryClient = new QueryClient({
   },
 });
 
-function ZeroWithAuth({ children }: { children: ReactNode }) {
-  const { user, loading } = useAuth();
-  const { accessToken } = useAccessToken();
-
-  const zeroRef = useRef<ReturnType<typeof createZero> | null>(null);
-
-  const userId = user?.id;
-
-  const { data: zeroInstance, isLoading } = useQuery({
-    queryKey: ["zero-instance", userId, accessToken],
-    queryFn: ({ queryKey }) => {
-      const _userId = queryKey[1];
-      const _accessToken = queryKey[2];
-      zeroRef.current?.close();
-      const instance = createZero(_accessToken, _userId);
-      zeroRef.current = instance;
-      return instance;
-    },
-    enabled: !loading,
-  });
-
-  if (!zeroInstance || isLoading) {
-    return (
-      <div className="min-h-screen bg-surface flex items-center justify-center">
-        <span className="font-mono text-sm text-ink-tertiary">Loading...</span>
-      </div>
-    );
-  }
-
-  return <ZeroProvider zero={zeroInstance}>{children}</ZeroProvider>;
-}
 
 function FrontendTelemetryBootstrap() {
   const { user } = useAuth();
@@ -87,16 +56,13 @@ export function AppProviders({ children }: { children: ReactNode }) {
   return (
     <AuthKitProvider>
       <Suspense fallback={null}>
-        <div className="fixed top-0 right-0 z-50 mx-4 my-2 hover:opacity-30 transition-all duration-200 ease-in-out">
-          <ConnectionStatus />
-        </div>
         <QueryClientProvider client={queryClient}>
           <ThemeProvider>
             <FrontendTelemetryBootstrap />
-            <ZeroWithAuth>{children}</ZeroWithAuth>
+            {children}
           </ThemeProvider>
+          <Toaster />
         </QueryClientProvider>
-        <Toaster />
       </Suspense>
     </AuthKitProvider>
   );

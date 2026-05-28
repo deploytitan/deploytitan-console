@@ -1,5 +1,3 @@
-import { OrgPage } from '@/views/console/OrgPage'
-
 export default function Page() {
-  return <OrgPage />
+  return <div>org page</div>;
 }

@@ -9,7 +9,6 @@ const apiRewriteSources = [
   '/auth/refresh',
   '/billing/:path*',
   '/github/:path*',
-  '/orgs/:path*',
   '/pull-requests/:path*',
   '/onboarding/signup',
 ]
