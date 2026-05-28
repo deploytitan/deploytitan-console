@@ -1,8 +1,12 @@
 import { authkitProxy } from "@workos-inc/authkit-nextjs";
 import { getWorkOSRedirectUri } from "@/lib/workosRedirectUri";
 
+const redirectUri = getWorkOSRedirectUri();
+console.log("Redirect URI: ", redirectUri);
+
 export default authkitProxy({
-  redirectUri: getWorkOSRedirectUri(),
+  debug: true,
+  redirectUri,
   middlewareAuth: {
     enabled: true,
     unauthenticatedPaths: [
@@ -18,5 +22,7 @@ export default authkitProxy({
 });
 
 export const config = {
-  matcher: ["/((?!_next/static|_next/image|favicon.ico|.*\\.svg$|.*\\.png$|.*\\.ico$|.*\\.webp$|.*\\.jpg$|.*\\.jpeg$|.*\\.gif$|.*\\.woff2?$|.*\\.ttf$).*)"],
+  matcher: [
+    "/((?!_next/static|_next/image|favicon.ico|.*\\.svg$|.*\\.png$|.*\\.ico$|.*\\.webp$|.*\\.jpg$|.*\\.jpeg$|.*\\.gif$|.*\\.woff2?$|.*\\.ttf$).*)",
+  ],
 };
