@@ -1,3 +1,5 @@
+import axios from "axios";
+
 export type PRMergeMethod = "merge" | "squash" | "rebase";
 
 export interface MergePullRequestInput {
@@ -37,14 +39,11 @@ export interface GitHubInstallationSyncResponse {
 }
 
 export function mergePullRequest(input: MergePullRequestInput) {
-  return apiRequest<MergePullRequestResponse>("/pull-requests/merge", {
-    method: "POST",
-    json: input,
-  });
+  return axios.post<MergePullRequestResponse>("/pull-requests/merge", input);
 }
 
 export function getPullRequestStatus(repoId: string, prNumber: number) {
-  return apiRequest<PullRequestStatusResponse>(
+  return axios.get<PullRequestStatusResponse>(
     `/pull-requests/${encodeURIComponent(repoId)}/${encodeURIComponent(String(prNumber))}/status`,
   );
 }
@@ -59,14 +58,13 @@ export function getGitHubInstallUrl(input: {
   if (input.projectId) params.set("projectId", input.projectId);
   if (input.returnTo) params.set("returnTo", input.returnTo);
   const query = params.toString();
-  return apiRequest<GitHubInstallUrlResponse>(
+  return axios.get<GitHubInstallUrlResponse>(
     `/github/install-url${query ? `?${query}` : ""}`,
   );
 }
 
 export function syncGitHubInstallation(installationId: string | number) {
-  return apiRequest<GitHubInstallationSyncResponse>(
+  return axios.post<GitHubInstallationSyncResponse>(
     `/github/installations/${encodeURIComponent(String(installationId))}/sync`,
-    { method: "POST" },
   );
 }

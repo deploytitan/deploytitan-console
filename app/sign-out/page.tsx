@@ -1,5 +1,5 @@
-import { Logout } from '@/views/Logout'
+import { redirect } from "next/navigation";
 
 export default function Page() {
-  return <Logout />
+  redirect('/')
 }

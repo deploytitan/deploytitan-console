@@ -1,5 +1,4 @@
-import { GitHubInstallCallback } from '@/views/GitHubInstallCallback'
 
 export default function Page() {
-  return <GitHubInstallCallback />
+  return <div>Github callback page</div>
 }
