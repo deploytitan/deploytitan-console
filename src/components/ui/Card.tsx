@@ -21,7 +21,7 @@ export function Card({ children, className, onClick }: CardProps) {
         onClick && 'cursor-pointer',
         className,
       )}
-      style={{ borderRadius: '2px' }}
+      style={{ borderRadius: '4px' }}
       onClick={onClick}
       onMouseMove={onMouseMove}
     >

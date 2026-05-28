@@ -46,7 +46,7 @@ export function UserAvatar({
         width={dim}
         height={dim}
         style={{
-        borderRadius: '50%',
+        borderRadius: '4px',
         objectFit: 'cover',
         border: '1px solid #e7e5e4',
           display: 'block',
@@ -62,7 +62,7 @@ export function UserAvatar({
       style={{
         width: dim,
         height: dim,
-        borderRadius: '50%',
+        borderRadius: '4px',
         background: '#c9a84c20',
         border: '1px solid #c9a84c40',
         display: 'flex',

@@ -36,7 +36,7 @@ function EmptyState({ onNew }: { onNew: () => void }) {
     <div className="flex flex-col items-center justify-center py-24 px-6 animate-fade-up">
       <div
         className="mb-5 flex size-11 items-center justify-center border border-border bg-muted/60"
-        style={{ borderRadius: "2px" }}
+        style={{ borderRadius: "4px" }}
       >
         <FolderGit2
           className="size-5 text-muted-foreground"
@@ -149,7 +149,7 @@ function CreateProjectDialog({
       <DialogContent
         showCloseButton
         className="sm:max-w-[400px]"
-        style={{ borderRadius: "2px" }}
+        style={{ borderRadius: "4px" }}
       >
         <form onSubmit={handleSubmit}>
           <DialogHeader>
@@ -185,7 +185,7 @@ function CreateProjectDialog({
           {error && (
             <div
               className="mt-3 flex items-start gap-2 px-3 py-2.5 bg-destructive/8 border border-destructive/20 text-destructive text-[12px]"
-              style={{ borderRadius: "2px" }}
+              style={{ borderRadius: "4px" }}
               role="alert"
             >
               <AlertCircle
@@ -269,7 +269,7 @@ export default function ProjectsPage() {
                   key={i}
                   className="h-[60px] animate-pulse bg-muted/40 border border-border/50"
                   style={{
-                    borderRadius: "2px",
+                    borderRadius: "4px",
                     animationDelay: `${i * 60}ms`,
                     opacity: 1 - i * 0.2,
                   }}
@@ -279,7 +279,7 @@ export default function ProjectsPage() {
           ) : hasProjects ? (
             <div
               className="border border-border overflow-hidden animate-fade-up"
-              style={{ borderRadius: "2px" }}
+              style={{ borderRadius: "4px" }}
             >
               {(projects as Project[]).map((project, i) => (
                 <ProjectRow

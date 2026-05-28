@@ -9,6 +9,8 @@ import { ConnectionStatus } from "@/components/console/ConnectionStatus";
 import { ThemeToggle } from "@/components/ui/ThemeToggle";
 import { UserAvatar } from "@/components/ui/UserAvatar";
 import { cn } from "@/lib/utils";
+import { signOutAction } from "@/actions/auth";
+import { Menu } from "@base-ui/react/menu";
 import {
   LayoutGrid,
   Rocket,
@@ -23,6 +25,8 @@ import {
   Settings,
   Zap,
   ChevronLeft,
+  ChevronUp,
+  LogOut,
   type LucideIcon,
 } from "lucide-react";
 import { queries } from "@deploytitan/zero-schema";
@@ -116,7 +120,7 @@ function NavLink({
     <Link
       href={href}
       className={cn(
-        "group flex items-center gap-2 px-3 py-1.5 text-[13px] transition-colors duration-100",
+        "group flex items-center gap-2 px-3 py-2 text-[13px] transition-colors duration-100",
         "rounded-[4px] leading-none",
         active
           ? "bg-sidebar-accent text-sidebar-foreground font-medium"
@@ -136,7 +140,7 @@ function NavLink({
       {badge && (
         <span
           className="ml-auto font-mono uppercase tracking-[0.06em] text-[8px] text-sidebar-foreground/40 bg-sidebar-accent/80 px-1 py-px"
-          style={{ borderRadius: "2px" }}
+          style={{ borderRadius: "4px" }}
         >
           {badge}
         </span>
@@ -152,10 +156,10 @@ function ProjectDisplay() {
   const projectName = projectDetails?.name;
 
   return (
-    <div className="px-2 pb-2">
+    <div className="px-3 pb-3">
       <SectionLabel>Project</SectionLabel>
       <div
-        className="flex items-center gap-2 px-2 py-1.5 bg-sidebar-accent/50 border border-sidebar-border"
+        className="flex items-center gap-2 px-3 py-2 bg-sidebar-accent/50 border border-sidebar-border"
         style={{ borderRadius: "4px" }}
       >
         <span className="font-mono text-[11px] tracking-wide text-sidebar-foreground/70 truncate">
@@ -168,31 +172,43 @@ function ProjectDisplay() {
 
 function NavGroupList({ navList }: { navList: NavItem[] }) {
   const pathname = usePathname();
-  const isActive = (href: string) => {
-    return pathname.includes(href);
-  };
+  const isActive = (href: string) => pathname.includes(href);
 
-  return navList.map((nav) => (
-    <div key={nav.label}>
-      {nav.type === "group" && <SectionLabel>{nav.label}</SectionLabel>}
-      <div className="space-y-0.5">
-        {nav.items?.map((item) =>
-          item.type === "group" ? (
-            <NavGroupList navList={item.items} />
-          ) : (
-            <NavLink
-              key={item.href}
-              href={item.href || ""}
-              icon={item.icon}
-              label={item.label}
-              badge={item.badge}
-              active={item.href ? isActive(item.href) : false}
-            />
-          ),
-        )}
+  return navList.map((nav) => {
+    if (nav.type === "item") {
+      return (
+        <NavLink
+          key={nav.href}
+          href={nav.href}
+          icon={nav.icon}
+          label={nav.label}
+          badge={nav.badge}
+          active={isActive(nav.href)}
+        />
+      );
+    }
+    return (
+      <div key={nav.label}>
+        <SectionLabel>{nav.label}</SectionLabel>
+        <div className="space-y-0.5">
+          {nav.items.map((item) =>
+            item.type === "group" ? (
+              <NavGroupList key={item.label} navList={item.items} />
+            ) : (
+              <NavLink
+                key={item.href}
+                href={item.href}
+                icon={item.icon}
+                label={item.label}
+                badge={item.badge}
+                active={isActive(item.href)}
+              />
+            ),
+          )}
+        </div>
       </div>
-    </div>
-  ));
+    );
+  });
 }
 
 export function ConsoleSidebar() {
@@ -221,23 +237,23 @@ export function ConsoleSidebar() {
       aria-label="Console navigation"
     >
       {/* Logo */}
-      <div className="flex h-11 shrink-0 items-center px-4 border-b border-sidebar-border">
+      <div className="flex h-14 shrink-0 items-center px-5 border-b border-sidebar-border">
         <BrandLogo className="w-28" />
       </div>
 
       {/* Project display */}
       {projectId && (
-        <div className="shrink-0 pt-2 border-b border-sidebar-border">
+        <div className="shrink-0 pt-3 border-b border-sidebar-border">
           <ProjectDisplay />
         </div>
       )}
 
       {/* Nav — scrollable */}
-      <nav className="flex-1 overflow-y-auto py-3 px-2 space-y-4">
+      <nav className="flex-1 overflow-y-auto py-4 px-3 space-y-5">
         {projectId && (
           <Link
             href={`/orgs/${orgId}/projects`}
-            className="flex items-center gap-1.5 px-3 py-1.5 text-[12px] text-sidebar-foreground/50 hover:text-sidebar-foreground transition-colors duration-100 rounded-[4px] hover:bg-sidebar-accent/70"
+            className="flex items-center gap-1.5 px-3 py-2 text-[12px] text-sidebar-foreground/50 hover:text-sidebar-foreground transition-colors duration-100 rounded-[4px] hover:bg-sidebar-accent/70"
           >
             <ChevronLeft className="size-3.5 shrink-0" strokeWidth={1.75} />
             All Projects
@@ -253,22 +269,88 @@ export function ConsoleSidebar() {
           <ThemeToggle />
         </div>
         {user && (
-          <div className="flex items-center gap-2.5 px-3 pb-3 pt-1">
-            <UserAvatar
-              profilePictureUrl={user.profilePictureUrl}
-              firstName={user.firstName}
-              lastName={user.lastName}
-              email={user.email}
-            />
-            <div className="min-w-0">
-              <p className="text-[12px] font-medium text-sidebar-foreground truncate leading-tight">
-                {displayName}
-              </p>
-              <p className="font-mono text-[9px] tracking-wide text-sidebar-foreground/45 truncate leading-tight mt-0.5">
-                {user.email}
-              </p>
-            </div>
-          </div>
+          <Menu.Root>
+            <Menu.Trigger
+              className={cn(
+                "group w-full flex items-center gap-2.5 px-3 pb-3 pt-1",
+                "cursor-pointer transition-colors duration-100",
+                "hover:bg-sidebar-accent/60",
+                "focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-sidebar-ring",
+                "data-[popup-open]:bg-sidebar-accent/60",
+              )}
+            >
+              <UserAvatar
+                profilePictureUrl={user.profilePictureUrl}
+                firstName={user.firstName}
+                lastName={user.lastName}
+                email={user.email}
+              />
+              <div className="min-w-0 flex-1 text-left">
+                <p className="text-[12px] font-medium text-sidebar-foreground truncate leading-tight">
+                  {displayName}
+                </p>
+                <p className="font-mono text-[9px] tracking-wide text-sidebar-foreground/45 truncate leading-tight mt-0.5">
+                  {user.email}
+                </p>
+              </div>
+              <ChevronUp
+                className="size-3 shrink-0 text-sidebar-foreground/30 transition-transform duration-150 group-data-[popup-open]:rotate-180"
+                strokeWidth={1.75}
+              />
+            </Menu.Trigger>
+
+            <Menu.Portal>
+              <Menu.Positioner
+                side="top"
+                align="start"
+                sideOffset={4}
+                className="z-50 outline-none"
+              >
+                <Menu.Popup
+                  className={cn(
+                    "w-[204px] overflow-hidden",
+                    "bg-sidebar border border-sidebar-border",
+                    "shadow-[0_4px_16px_rgba(0,0,0,0.12),0_1px_4px_rgba(0,0,0,0.08)]",
+                    "data-[starting-style]:opacity-0 data-[starting-style]:translate-y-1",
+                    "data-[ending-style]:opacity-0 data-[ending-style]:translate-y-1",
+                    "transition-[opacity,transform] duration-150 ease-out",
+                  )}
+                  style={{ borderRadius: "2px" }}
+                >
+                  {/* User info header */}
+                  <div className="px-3 py-2.5 border-b border-sidebar-border">
+                    <p className="text-[12px] font-medium text-sidebar-foreground truncate leading-tight">
+                      {displayName}
+                    </p>
+                    <p className="font-mono text-[9px] tracking-wide text-sidebar-foreground/45 truncate leading-tight mt-0.5">
+                      {user.email}
+                    </p>
+                  </div>
+
+                  {/* Actions */}
+                  <div className="py-1">
+                    <Menu.Item
+                      className={cn(
+                        "flex items-center gap-2 w-full px-3 py-2 text-[12px]",
+                        "text-sidebar-foreground/70 cursor-pointer select-none",
+                        "transition-colors duration-100 outline-none",
+                        "hover:bg-sidebar-accent/70 hover:text-sidebar-foreground",
+                        "data-[highlighted]:bg-sidebar-accent/70 data-[highlighted]:text-sidebar-foreground",
+                        "focus-visible:bg-sidebar-accent/70",
+                      )}
+                      onClick={() => signOutAction()}
+                    >
+                      <LogOut
+                        className="size-3.5 shrink-0 opacity-60"
+                        strokeWidth={1.75}
+                      />
+                      Sign out
+                    </Menu.Item>
+                  </div>
+                </Menu.Popup>
+              </Menu.Positioner>
+            </Menu.Portal>
+          </Menu.Root>
         )}
       </div>
     </aside>

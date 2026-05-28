@@ -12,10 +12,12 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 
 import { ThemeToggle } from "@/components/ui/ThemeToggle";
+import { BrandLogo } from "@/components/ui/BrandLogo";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { useTheme } from "@/hooks/useTheme";
 import { useAccessToken, useAuth } from "@workos-inc/authkit-nextjs/components";
-import Link from "next/dist/client/link";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
 
 /* ═══════════════════════════════════════════════════════════════════════════
    TYPES
@@ -1009,44 +1011,13 @@ export function PageHeader({ dark = false }: { dark?: boolean }) {
     <header className="absolute inset-x-0 top-0 z-20 flex items-center justify-between px-6 py-5 sm:px-8">
       <Link
         href="/"
-        className="inline-flex items-center gap-3 text-sm transition-opacity hover:opacity-80"
-        style={{ color: dark ? "#c8c2b8" : "var(--color-ink-secondary)" }}
+        className="inline-flex items-center transition-opacity hover:opacity-80"
+        aria-label="DeployTitan home"
       >
-        <span
-          className="flex h-8 w-8 items-center justify-center"
-          style={{
-            background: dark ? "#f5f4f1" : "var(--color-ink)",
-            borderRadius: "2px",
-          }}
-          aria-hidden="true"
-        >
-          <svg
-            width="16"
-            height="16"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke={dark ? "#0d0c0a" : "var(--color-surface)"}
-            strokeWidth="2.5"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          >
-            <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" />
-          </svg>
-        </span>
-        <span
-          style={{
-            fontWeight: 500,
-            letterSpacing: "-0.01em",
-            fontFamily: "Inter, system-ui, sans-serif",
-          }}
-        >
-          Deploy
-          <span
-            style={{ color: dark ? "#c9a84c" : "var(--color-primary-dark)" }}
-          >
-            Titan
-          </span>
-        </span>
+        <BrandLogo
+          className="h-5 w-auto"
+          variant={dark ? "dark-mode" : "light-mode"}
+        />
       </Link>
       <ThemeToggle />
     </header>
@@ -1077,9 +1048,10 @@ export function ErrorPageShell({
   const isLoading = loading ?? false;
   const { resolved } = useTheme();
   const [reportOpen, setReportOpen] = useState(false);
+  const pathname = usePathname();
 
   const isDark = resolved === "dark";
-  const path = pathProp ?? location.pathname;
+  const path = pathProp ?? pathname ?? "/";
 
   const primaryAction: Action | null = isLoading
     ? null

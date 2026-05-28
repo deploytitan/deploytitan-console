@@ -89,7 +89,7 @@ export function ThemeToggle({ className }: ThemeToggleProps) {
         'flex items-center border border-line bg-surface-alt p-[2px] gap-[1px]',
         className,
       )}
-      style={{ borderRadius: '2px' }}
+      style={{ borderRadius: '4px' }}
       role="group"
       aria-label="Theme selector"
     >

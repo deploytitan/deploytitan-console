@@ -35,7 +35,7 @@ export function Modal({ open, onClose, title, children, className }: ModalProps)
         className={className}
         // Override panel styles to match the DeployTitan Instrument Panel:
         // 2px radius, surface bg, amber-ring shadow on the frame.
-        style={{ borderRadius: '2px' }}
+        style={{ borderRadius: '4px' }}
       >
         {title && (
           <DialogHeader>

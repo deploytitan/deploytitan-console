@@ -14,6 +14,9 @@ const apiRewriteSources = [
 ]
 
 const nextConfig: NextConfig = {
+  experimental: {
+    globalNotFound: true,
+  },
   async rewrites() {
     if (!apiOrigin) return []
 
