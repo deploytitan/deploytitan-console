@@ -24,47 +24,72 @@ import {
   Zap,
   type LucideIcon,
 } from "lucide-react";
+import { queries } from "@deploytitan/zero-schema";
+import { useQuery, useZero } from "@rocicorp/zero/react";
 
-interface NavItem {
-  label: string;
-  href?: string;
-  icon?: LucideIcon;
-  badge?: string;
-  items?: NavItem[];
-}
+type NavItem =
+  | {
+      type: "group";
+      label: string;
+      icon?: LucideIcon;
+      badge?: string;
+      items: NavItem[];
+    }
+  | {
+      type: "item";
+      label: string;
+      href: string;
+      icon: LucideIcon;
+      badge?: string;
+      items?: NavItem[];
+    };
 
-const PROJECT_NAV: NavItem[] = [
+const generateProjectNav = (orgId: string, projectId: string): NavItem[] => [
   {
     label: "Workflows",
+    type: "group",
     items: [
-      { label: "Overview", href: "overview", icon: LayoutGrid },
-      { label: "Rollouts", href: "rollouts", icon: Rocket },
-      { label: "Ledger", href: "ledger", icon: ScrollText },
-      { label: "Observatory", href: "observatory", icon: Activity },
-      { label: "Pull Requests", href: "pull-requests", icon: GitPullRequest },
-      { label: "Timeline", href: "timeline", icon: History },
-      { label: "Rollback", href: "rollback", icon: RotateCcw },
+      {
+        type: "item",
+        label: "Overview",
+        icon: LayoutGrid,
+        href: `/orgs/${orgId}/projects/${projectId}/overview`,
+      },
+      // { label: "Rollouts", href: "rollouts", icon: Rocket },
+      // { label: "Ledger", href: "ledger", icon: ScrollText },
+      // { label: "Observatory", href: "observatory", icon: Activity },
+      // { label: "Pull Requests", href: "pull-requests", icon: GitPullRequest },
+      // { label: "Timeline", href: "timeline", icon: History },
+      // { label: "Rollback", href: "rollback", icon: RotateCcw },
     ],
   },
   {
     label: "Project",
+    type: "group",
     items: [
-      { label: "Policies", href: "policies", icon: Shield },
-      { label: "Foresight", href: "foresight", icon: Zap, badge: "BETA" },
-      { label: "Integrate", href: "integrate", icon: Plug2 },
-      { label: "Configure", href: "configure", icon: SlidersHorizontal },
-      { label: "Settings", href: "settings", icon: Settings },
+      {
+        type: "item",
+        label: "Overview",
+        icon: LayoutGrid,
+        href: `/orgs/${orgId}/projects/${projectId}/policies`,
+      },
+      // { label: "Foresight", href: "foresight", icon: Zap, badge: "BETA" },
+      // { label: "Integrate", href: "integrate", icon: Plug2 },
+      // { label: "Configure", href: "configure", icon: SlidersHorizontal },
+      // { label: "Settings", href: "settings", icon: Settings },
     ],
   },
 ];
 
 const generateOrgNav = (orgId: string): NavItem[] => [
   {
+    type: "item",
     label: "Project List",
     href: `/orgs/${orgId}/projects`,
     icon: LayoutGrid,
   },
   {
+    type: "item",
     href: `/orgs/${orgId}/settings`,
     icon: Settings,
     label: "Settings",
@@ -125,12 +150,11 @@ function NavLink({
   );
 }
 
-function ProjectDisplay({ projectId }: { projectId: string }) {
-  const display = projectId.includes("-")
-    ? projectId.split("-")[0]
-    : projectId.length > 12
-      ? `${projectId.slice(0, 12)}…`
-      : projectId;
+function ProjectDisplay() {
+  const params = useParams();
+  const projectId = params?.projectId as string | undefined;
+  const [projectDetails] = useQuery(queries.projectById({ id: projectId }));
+  const projectName = projectDetails?.name;
 
   return (
     <div className="px-2 pb-2">
@@ -140,33 +164,60 @@ function ProjectDisplay({ projectId }: { projectId: string }) {
         style={{ borderRadius: "4px" }}
       >
         <span className="font-mono text-[11px] tracking-wide text-sidebar-foreground/70 truncate">
-          {display}
+          {projectName}
         </span>
       </div>
     </div>
   );
 }
 
-export function ConsoleSidebar() {
+function NavGroupList({ navList }: { navList: NavItem[] }) {
   const pathname = usePathname();
+  const isActive = (href: string) => {
+    return pathname.includes(href);
+  };
+
+  return navList.map((nav) => (
+    <div key={nav.label}>
+      {nav.type === "group" && <SectionLabel>{nav.label}</SectionLabel>}
+      <div className="space-y-0.5">
+        {nav.items?.map((item) =>
+          item.type === "group" ? (
+            <NavGroupList navList={item.items} />
+          ) : (
+            <NavLink
+              key={item.href}
+              href={item.href || ""}
+              icon={item.icon}
+              label={item.label}
+              badge={item.badge}
+              active={item.href ? isActive(item.href) : false}
+            />
+          ),
+        )}
+      </div>
+    </div>
+  ));
+}
+
+export function ConsoleSidebar() {
   const params = useParams();
-  const router = useRouter();
   const { user } = useAuth();
-  const { accessToken } = useAccessToken();
 
   const orgId = params?.orgId as string | undefined;
   const projectId = params?.projectId as string | undefined;
-  const projectBase =
-    orgId && projectId ? `/orgs/${orgId}/projects/${projectId}` : null;
-
-  const isActive = (href: string) =>
-    projectBase ? pathname === `${projectBase}/${href}` : false;
 
   const displayName = user?.firstName
     ? user.lastName
       ? `${user.firstName} ${user.lastName}`
       : user.firstName
     : (user?.email?.split("@")[0] ?? "");
+
+  if (!orgId) return;
+
+  const navList = projectId
+    ? generateProjectNav(orgId, projectId)
+    : generateOrgNav(orgId);
 
   return (
     <aside
@@ -182,47 +233,13 @@ export function ConsoleSidebar() {
       {/* Project display */}
       {projectId && (
         <div className="shrink-0 pt-2 border-b border-sidebar-border">
-          <ProjectDisplay projectId={projectId} />
+          <ProjectDisplay />
         </div>
       )}
 
       {/* Nav — scrollable */}
       <nav className="flex-1 overflow-y-auto py-3 px-2 space-y-4">
-        {projectBase
-          ? PROJECT_NAV.map((group) => (
-              <div key={group.label}>
-                <SectionLabel>{group.label}</SectionLabel>
-                <div className="space-y-0.5">
-                  {group.items?.map((item) => (
-                    <NavLink
-                      key={item.href}
-                      href={`${projectBase}/${item.href}`}
-                      icon={item.icon}
-                      label={item.label}
-                      badge={item.badge}
-                      active={item.href ? isActive(item.href) : false}
-                    />
-                  ))}
-                </div>
-              </div>
-            ))
-          : orgId && (
-              <div>
-                <SectionLabel>Org</SectionLabel>
-                <div className="space-y-0.5">
-                  {generateOrgNav(orgId)?.map((item) => (
-                    <NavLink
-                      key={item.href}
-                      href={item.href || ""}
-                      icon={item.icon}
-                      label={item.label}
-                      badge={item.badge}
-                      active={item.href ? isActive(item.href) : false}
-                    />
-                  ))}
-                </div>
-              </div>
-            )}
+        <NavGroupList navList={navList} />
       </nav>
 
       {/* Footer */}
