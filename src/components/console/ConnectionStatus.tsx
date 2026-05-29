@@ -12,6 +12,7 @@
  */
 
 import { useConnectionState } from "@rocicorp/zero/react";
+import { usePendingMutations } from "@/store/pendingMutations";
 
 type StatusConfig = {
   dotColor: string;
@@ -38,20 +39,42 @@ function getStatusConfig(stateName: string): StatusConfig {
   }
 }
 
+function getWriteStatusConfig({
+  failedCount,
+  pendingCount,
+}: {
+  failedCount: number;
+  pendingCount: number;
+}): StatusConfig | null {
+  if (failedCount > 0) {
+    return { dotColor: "#f59e0b", label: "Stale", pulse: true };
+  }
+  if (pendingCount > 0) {
+    return { dotColor: "#f59e0b", label: "Pending", pulse: true };
+  }
+  return null;
+}
+
 export function ConnectionStatus() {
   const state = useConnectionState();
+  const { failedCount, pendingCount } = usePendingMutations();
 
   // Not available (SSR / unauthenticated / pre-mount) — render nothing.
   if (state === null) return null;
 
   // When connected and stable, render a quiet indicator.
   // When in a bad or transient state, render with more presence.
-  const { dotColor, label, pulse } = getStatusConfig(state.name);
-  const isHealthy = state.name === "connected";
+  const writeStatus =
+    state.name === "connected"
+      ? getWriteStatusConfig({ failedCount, pendingCount })
+      : null;
+  const { dotColor, label, pulse } = writeStatus ?? getStatusConfig(state.name);
+  const isHealthy = state.name === "connected" && writeStatus === null;
   const isBad =
     state.name === "disconnected" ||
     state.name === "error" ||
-    state.name === "closed";
+    state.name === "closed" ||
+    failedCount > 0;
 
   return (
     <div

@@ -42,8 +42,8 @@ export function useCreateProject() {
             name: args.name,
           }),
         );
-        await write.client;
         registerPendingMutation(write.server);
+        await write.client;
         await write.server;
         return { id, publicId, name: args.name };
       } catch (error) {
