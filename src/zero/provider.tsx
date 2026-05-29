@@ -12,16 +12,21 @@
  *   - `context` is passed to query/mutator fns as `ctx` on the client side
  */
 
-import { Zero } from "@rocicorp/zero";
+import { Zero, type UpdateNeededReason } from "@rocicorp/zero";
 import type { ZeroContext } from "@deploytitan/zero-schema";
 import { mutators, schema } from "@deploytitan/zero-schema";
 import { ZERO_SERVER } from "../env";
 import { logFrontendEvent } from "../lib/frontendTelemetry";
 
-export function createZero(
-  token: string | undefined,
-  userId: string | undefined,
-) {
+export function createZero({
+  token,
+  userId,
+  onUpdateNeeded,
+}: {
+  token: string | undefined;
+  userId: string | undefined;
+  onUpdateNeeded?: (reason: UpdateNeededReason) => void;
+}) {
   if (!ZERO_SERVER) {
     throw new Error(
       "NEXT_PUBLIC_ZERO_SERVER must be set before creating the Zero client.",
@@ -29,7 +34,7 @@ export function createZero(
   }
 
   // Zero requires userID whenever auth is set — only pass auth if we have both.
-  const hasAuth = token !== null && userId !== null;
+  const hasAuth = Boolean(token && userId);
   const context: ZeroContext | undefined = userId ? { userId } : undefined;
 
   logFrontendEvent({
@@ -50,5 +55,6 @@ export function createZero(
     schema,
     mutators,
     kvStore: "idb",
+    onUpdateNeeded,
   });
 }
