@@ -60,6 +60,7 @@ function EmptyState({ onNew }: { onNew: () => void }) {
 
 type Project = {
   id: string;
+  publicId: string | null;
   orgId: string;
   name: string;
   createdAt: number | null;
@@ -129,7 +130,7 @@ function CreateProjectDialog({
       onOpenChange(false);
       setName("");
       startTransition(() => {
-        router.push(`/orgs/${orgId}/projects/${project.id}/overview`);
+        router.push(`/orgs/${orgId}/projects/${project.publicId}/overview`);
       });
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to create project");
@@ -285,7 +286,7 @@ export default function ProjectsPage() {
                 <ProjectRow
                   key={project.id}
                   project={project}
-                  href={`/orgs/${orgId}/projects/${project.id}/overview`}
+                  href={`/orgs/${orgId}/projects/${project.publicId ?? project.id}/overview`}
                 />
               ))}
             </div>

@@ -19,7 +19,12 @@ export default function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="en" suppressHydrationWarning className={jetbrainsMono.variable}>
+    <html
+      lang="en"
+      suppressHydrationWarning
+      className={jetbrainsMono.variable}
+      data-scroll-behavior="smooth"
+    >
       <body>
         <AppProviders>{children}</AppProviders>
       </body>

@@ -49,7 +49,7 @@ type NavItem =
       items?: NavItem[];
     };
 
-const generateProjectNav = (orgId: string, projectId: string): NavItem[] => [
+const generateProjectNav = (orgId: string, projectPublicId: string): NavItem[] => [
   {
     label: "Project",
     type: "group",
@@ -58,13 +58,13 @@ const generateProjectNav = (orgId: string, projectId: string): NavItem[] => [
         type: "item",
         label: "Overview",
         icon: LayoutGrid,
-        href: `/orgs/${orgId}/projects/${projectId}/overview`,
+        href: `/orgs/${orgId}/projects/${projectPublicId}/overview`,
       },
       {
         type: "item",
         label: "Policies",
         icon: Shield,
-        href: `/orgs/${orgId}/projects/${projectId}/policies`,
+        href: `/orgs/${orgId}/projects/${projectPublicId}/policies`,
       },
       // { label: "Rollouts", href: "rollouts", icon: Rocket },
       // { label: "Ledger", href: "ledger", icon: ScrollText },
@@ -151,8 +151,10 @@ function NavLink({
 
 function ProjectDisplay() {
   const params = useParams();
-  const projectId = params?.projectId as string | undefined;
-  const [projectDetails] = useQuery(queries.projectById({ id: projectId }));
+  const projectPublicId = params?.projectId as string | undefined;
+  const [projectDetails] = useQuery(
+    queries.projectByPublicId({ publicId: projectPublicId }),
+  );
   const projectName = projectDetails?.name;
 
   return (
@@ -216,7 +218,7 @@ export function ConsoleSidebar() {
   const { user } = useAuth();
 
   const orgId = params?.orgId as string | undefined;
-  const projectId = params?.projectId as string | undefined;
+  const projectPublicId = params?.projectId as string | undefined;
 
   const displayName = user?.firstName
     ? user.lastName
@@ -226,8 +228,8 @@ export function ConsoleSidebar() {
 
   if (!orgId) return;
 
-  const navList = projectId
-    ? generateProjectNav(orgId, projectId)
+  const navList = projectPublicId
+    ? generateProjectNav(orgId, projectPublicId)
     : generateOrgNav(orgId);
 
   return (
@@ -242,7 +244,7 @@ export function ConsoleSidebar() {
       </div>
 
       {/* Project display */}
-      {projectId && (
+      {projectPublicId && (
         <div className="shrink-0 pt-3 border-b border-sidebar-border">
           <ProjectDisplay />
         </div>
@@ -250,7 +252,7 @@ export function ConsoleSidebar() {
 
       {/* Nav — scrollable */}
       <nav className="flex-1 overflow-y-auto py-4 px-3 space-y-5">
-        {projectId && (
+        {projectPublicId && (
           <Link
             href={`/orgs/${orgId}/projects`}
             className="flex items-center gap-1.5 px-3 py-2 text-[12px] text-sidebar-foreground/50 hover:text-sidebar-foreground transition-colors duration-100 rounded-[4px] hover:bg-sidebar-accent/70"

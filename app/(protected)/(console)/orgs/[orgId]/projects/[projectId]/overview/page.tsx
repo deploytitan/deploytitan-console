@@ -18,9 +18,9 @@ function formatDate(ts: number | null): string {
 export default function OverviewPage() {
   const params = useParams();
   const orgId = params?.orgId as string;
-  const projectId = params?.projectId as string;
+  const projectPublicId = params?.projectId as string;
 
-  const [project] = useQuery(queries.projectById({ id: projectId }));
+  const [project] = useQuery(queries.projectByPublicId({ publicId: projectPublicId }));
 
   return (
     <div className="min-h-screen bg-background">
@@ -72,7 +72,7 @@ export default function OverviewPage() {
           </p>
           <div className="grid grid-cols-1 gap-px border border-border overflow-hidden" style={{ borderRadius: "4px" }}>
             <Link
-              href={`/orgs/${orgId}/projects/${projectId}/policies`}
+              href={`/orgs/${orgId}/projects/${projectPublicId}/policies`}
               className="group flex items-center gap-3 px-5 py-3.5 bg-background border-b border-border last:border-b-0 hover:bg-muted/50 transition-colors duration-100"
             >
               <Shield
@@ -94,4 +94,3 @@ export default function OverviewPage() {
     </div>
   );
 }
-

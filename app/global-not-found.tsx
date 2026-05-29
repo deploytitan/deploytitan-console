@@ -12,7 +12,12 @@ const jetbrainsMono = JetBrains_Mono({
 
 export default function GlobalNotFound() {
   return (
-    <html lang="en" suppressHydrationWarning className={jetbrainsMono.variable}>
+    <html
+      lang="en"
+      suppressHydrationWarning
+      className={jetbrainsMono.variable}
+      data-scroll-behavior="smooth"
+    >
       <body>
         <AppProviders>
           <ErrorPageShell variant="not-found" />

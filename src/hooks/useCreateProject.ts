@@ -17,6 +17,7 @@ interface CreateProjectArgs {
 
 interface CreatedProject {
   id: string;
+  publicId: string;
   name: string;
 }
 
@@ -44,7 +45,7 @@ export function useCreateProject() {
         await write.client;
         registerPendingMutation(write.server);
         await write.server;
-        return { id, name: args.name };
+        return { id, publicId, name: args.name };
       } catch (error) {
         throw error;
       }
