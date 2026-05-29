@@ -1,6 +1,6 @@
 import type { NextConfig } from 'next'
 
-const apiOrigin = process.env.API_PROXY_ORIGIN ?? process.env.NEXT_PUBLIC_API_URL
+const apiOrigin = process.env.NEXT_PUBLIC_API_URL
 
 const apiRewriteSources = [
   '/auth/login',
