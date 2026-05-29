@@ -4,11 +4,10 @@
  * Returns an async `create` function and an `isPending` flag.
  */
 
-import { useCallback, useState } from "react";
-import { useZero, useConnectionState } from "@rocicorp/zero/react";
-import { mutators } from "@deploytitan/zero-schema";
-import { createPrefixedId } from "../lib/prefixedIds";
-import { logFrontendEvent } from "../lib/frontendTelemetry";
+import { useCallback } from "react";
+import { useZero } from "@rocicorp/zero/react";
+import { createProjectIds, mutators } from "@deploytitan/zero-schema";
+import { logFrontendEvent } from "@/lib/frontendTelemetry";
 import { registerPendingMutation } from "@/store/pendingMutations";
 
 interface CreateProjectArgs {
@@ -23,11 +22,10 @@ interface CreatedProject {
 
 export function useCreateProject() {
   const zero = useZero();
-  const connectionState = useConnectionState();
 
   const create = useCallback(
     async (args: CreateProjectArgs): Promise<CreatedProject> => {
-      const id = createPrefixedId("prj");
+      const { id, publicId } = createProjectIds();
       logFrontendEvent({
         level: "info",
         message: "project.create.started",
@@ -36,7 +34,12 @@ export function useCreateProject() {
 
       try {
         const write = zero.mutate(
-          mutators.project.create({ id, orgId: args.orgId, name: args.name }),
+          mutators.project.create({
+            id,
+            publicId,
+            orgId: args.orgId,
+            name: args.name,
+          }),
         );
         await write.client;
         registerPendingMutation(write.server);
@@ -46,7 +49,7 @@ export function useCreateProject() {
         throw error;
       }
     },
-    [zero, connectionState],
+    [zero],
   );
 
   return { create };

@@ -38,6 +38,14 @@ export interface GitHubInstallationSyncResponse {
   pullRequests: number;
 }
 
+export interface GitHubInstallCallbackResponse extends GitHubInstallationSyncResponse {
+  installationId: number;
+  setupAction: string | null;
+  orgId: string | null;
+  projectId: string | null;
+  returnTo: string | null;
+}
+
 export function mergePullRequest(input: MergePullRequestInput) {
   return axios.post<MergePullRequestResponse>("/pull-requests/merge", input);
 }
@@ -66,5 +74,22 @@ export function getGitHubInstallUrl(input: {
 export function syncGitHubInstallation(installationId: string | number) {
   return axios.post<GitHubInstallationSyncResponse>(
     `/github/installations/${encodeURIComponent(String(installationId))}/sync`,
+  );
+}
+
+export function completeGitHubInstallation(input: {
+  installationId: string;
+  setupAction?: string | null;
+  state?: string | null;
+}) {
+  return axios.get<GitHubInstallCallbackResponse>(
+    `/api/github/install/callback`,
+    {
+      params: {
+        installation_id: input.installationId,
+        setup_action: input.setupAction,
+        state: input.state,
+      },
+    },
   );
 }

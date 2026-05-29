@@ -12,11 +12,11 @@ importers:
         specifier: ^1.4.1
         version: 1.5.0(@types/react@19.2.15)(date-fns@4.3.0)(react-dom@19.2.6(react@19.2.6))(react@19.2.6)
       '@deploytitan/design-tokens':
-        specifier: ^0.3.1
+        specifier: latest
         version: 0.3.1
       '@deploytitan/zero-schema':
-        specifier: ^0.1.0
-        version: 0.1.0(@opentelemetry/api@1.9.1)(@opentelemetry/core@2.7.1(@opentelemetry/api@1.9.1))(@types/pg@8.15.5)(postgres@3.4.7)
+        specifier: latest
+        version: 0.3.0(@opentelemetry/api@1.9.1)(@opentelemetry/core@2.7.1(@opentelemetry/api@1.9.1))(@types/pg@8.15.5)(postgres@3.4.7)
       '@fontsource-variable/geist':
         specifier: ^5.2.8
         version: 5.2.9
@@ -306,14 +306,14 @@ packages:
   '@databases/validate-unicode@1.0.0':
     resolution: {integrity: sha512-dLKqxGcymeVwEb/6c44KjOnzaAafFf0Wxa8xcfEjx/qOl3rdijsKYBAtIGhtVtOlpPf/PFKfgTuFurSPn/3B/g==}
 
-  '@deploytitan/db-schema@1.0.0':
-    resolution: {integrity: sha512-TJwYHkIvp73mdAhL4jGab/JBJJHRu3QBVBBaiaCoeevbxc9OEP+gVr306RBmWTZpbQBXcSbjb3PTun9G7AOQjA==, tarball: https://npm.pkg.github.com/download/@deploytitan/db-schema/1.0.0/a2c117be46f0b705702dfe2a261e1bfca3ed78d8}
+  '@deploytitan/db-schema@1.1.0':
+    resolution: {integrity: sha512-Qn/9Lgm3Jq3sU4UNvtSJKgPOIoTJDceHnxRkdKR0El32hKBn1KMkcDlAG9OOHFT7lQDCXlmQv/km8cO9KA59pw==, tarball: https://npm.pkg.github.com/download/@deploytitan/db-schema/1.1.0/8fe2c01272ecee8e7a78608b0c50d365080f53ce}
 
   '@deploytitan/design-tokens@0.3.1':
     resolution: {integrity: sha512-/emXMSR/mhJsUCCgp1g9a9tl6xW+Nf6XZyAySCj2RPyToZE3H5r9+Xil1AQ524dNacH/m7BNIPi0CqDNl5tyhQ==, tarball: https://npm.pkg.github.com/download/@deploytitan/design-tokens/0.3.1/0a3af9766717e7f483ceeb80c6307f3d01ae4ba5}
 
-  '@deploytitan/zero-schema@0.1.0':
-    resolution: {integrity: sha512-d3jN89uiuKKGnxqPkmfd80pO4c6d1+zqdWbt02DcZtbVRJ8054FiBJm1QoaPMYNa4kpGj04ji8VY1pIlwR7USA==, tarball: https://npm.pkg.github.com/download/@deploytitan/zero-schema/0.1.0/8d7d9c758fc54a10605b649095c442cfe2fe6677}
+  '@deploytitan/zero-schema@0.3.0':
+    resolution: {integrity: sha512-I1jQ9PKf4wMTVn84Sm4DwJUE2zoGzx3oioIjC3QUdwvpHtLEN1mV8L5rCffBOqDqXScNE5YZDErURs0qQhRITw==, tarball: https://npm.pkg.github.com/download/@deploytitan/zero-schema/0.3.0/5ab367d9313bae9c430967e42bef02023301eaaa}
 
   '@dotenvx/dotenvx@1.69.1':
     resolution: {integrity: sha512-kwQB5KcAegxw/+NGUgXAo5ovyOSjlMhoXSSnSEpDhoHJwzMcMO0HE1U0VCYZ7jbAeCMGamed9XdWzOA5ixtTNg==}
@@ -6588,7 +6588,7 @@ snapshots:
 
   '@databases/validate-unicode@1.0.0': {}
 
-  '@deploytitan/db-schema@1.0.0(@opentelemetry/api@1.9.1)(@opentelemetry/core@2.7.1(@opentelemetry/api@1.9.1))(@types/pg@8.15.5)(postgres@3.4.7)':
+  '@deploytitan/db-schema@1.1.0(@opentelemetry/api@1.9.1)(@opentelemetry/core@2.7.1(@opentelemetry/api@1.9.1))(@types/pg@8.15.5)(postgres@3.4.7)':
     dependencies:
       '@rocicorp/zero': 1.5.0(@opentelemetry/core@2.7.1(@opentelemetry/api@1.9.1))
       drizzle-kit: 0.31.10
@@ -6632,10 +6632,11 @@ snapshots:
 
   '@deploytitan/design-tokens@0.3.1': {}
 
-  '@deploytitan/zero-schema@0.1.0(@opentelemetry/api@1.9.1)(@opentelemetry/core@2.7.1(@opentelemetry/api@1.9.1))(@types/pg@8.15.5)(postgres@3.4.7)':
+  '@deploytitan/zero-schema@0.3.0(@opentelemetry/api@1.9.1)(@opentelemetry/core@2.7.1(@opentelemetry/api@1.9.1))(@types/pg@8.15.5)(postgres@3.4.7)':
     dependencies:
-      '@deploytitan/db-schema': 1.0.0(@opentelemetry/api@1.9.1)(@opentelemetry/core@2.7.1(@opentelemetry/api@1.9.1))(@types/pg@8.15.5)(postgres@3.4.7)
+      '@deploytitan/db-schema': 1.1.0(@opentelemetry/api@1.9.1)(@opentelemetry/core@2.7.1(@opentelemetry/api@1.9.1))(@types/pg@8.15.5)(postgres@3.4.7)
       '@rocicorp/zero': 1.5.0(@opentelemetry/core@2.7.1(@opentelemetry/api@1.9.1))
+      nanoid: 5.1.11
       zod: 4.4.3
     transitivePeerDependencies:
       - '@75lb/nature'
