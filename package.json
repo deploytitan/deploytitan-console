@@ -15,8 +15,8 @@
   },
   "dependencies": {
     "@base-ui/react": "^1.4.1",
-    "@deploytitan/design-tokens": "^0.3.1",
-    "@deploytitan/zero-schema": "^0.1.0",
+    "@deploytitan/design-tokens": "latest",
+    "@deploytitan/zero-schema": "latest",
     "@fontsource-variable/geist": "^5.2.8",
     "@grafana/faro-web-sdk": "^2.7.0",
     "@grafana/faro-web-tracing": "^2.7.0",
