@@ -2,6 +2,30 @@
 
 Standalone Next.js console for DeployTitan, intended to run on Vercel while the original monorepo continues to own backend services and private packages.
 
+## Companion repositories
+
+| Repo | Path | Purpose |
+|---|---|---|
+| `deploytitan-monorepo` | `~/projects/deploytitan-monorepo` | Backend API, worker, DB schema, Zero schema, shared packages |
+| `deploytitan-console` | `~/projects/deploytitan-console` | This repo — Next.js frontend |
+
+The backend monorepo owns:
+- **DB schema** — `packages/db-schema/src/index.ts` (Drizzle ORM tables + Postgres migrations)
+- **Zero schema** — `packages/db-schema/zero-schema.gen.ts` (auto-generated; run `pnpm --filter @deploytitan/db-schema generate`)
+- **Zero queries** — `packages/zero-schema/src/queries.ts`
+- **Zero mutators** — `packages/zero-schema/src/mutators.ts`
+- **API** — `apps/api/src/` (Effect HTTP, BullMQ workers)
+
+When adding a new feature that needs new tables or API endpoints:
+1. Update `packages/db-schema/src/index.ts`
+2. Run `pnpm --filter @deploytitan/db-schema db:generate` (Drizzle migration)
+3. Run `pnpm --filter @deploytitan/db-schema generate` (Zero schema regen)
+4. Run `pnpm --filter @deploytitan/db-schema build` (publish built types)
+5. Update `packages/zero-schema/src/queries.ts` and `mutators.ts`
+6. Bump patch versions in both `db-schema` and `zero-schema` `package.json`
+7. Add API group + handler in `apps/api/src/api/groups/` and `handlers/`
+8. Register in `apps/api/src/api/Api.ts` and `apps/api/src/main.ts`
+
 ## Development
 
 ```bash

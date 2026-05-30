@@ -17,6 +17,7 @@ import {
   LayoutGrid,
   LogOut,
   type LucideIcon,
+  PackageCheck,
   Settings,
   Shield,
 } from "lucide-react";
@@ -60,6 +61,12 @@ const generateProjectNav = (
         label: "Policies",
         icon: Shield,
         href: `/orgs/${orgId}/projects/${projectPublicId}/policies`,
+      },
+      {
+        type: "item",
+        label: "Releases",
+        icon: PackageCheck,
+        href: `/orgs/${orgId}/projects/${projectPublicId}/releases`,
       },
       // { label: "Rollouts", href: "rollouts", icon: Rocket },
       // { label: "Ledger", href: "ledger", icon: ScrollText },

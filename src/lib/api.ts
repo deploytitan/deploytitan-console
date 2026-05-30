@@ -71,6 +71,33 @@ export function getGitHubInstallUrl(input: {
   );
 }
 
+// ---------------------------------------------------------------------------
+// Release packets
+// ---------------------------------------------------------------------------
+
+export interface MergeAllJobResult {
+  pullRequestId: string;
+  prNumber: number;
+  jobId: string;
+  status: "queued";
+}
+
+export interface MergeAllResponse {
+  packetId: string;
+  queued: number;
+  jobs: MergeAllJobResult[];
+}
+
+export function mergeAllReleasePacket(packetId: string) {
+  return axios.post<MergeAllResponse>(
+    `/release-packets/${encodeURIComponent(packetId)}/merge-all`,
+  );
+}
+
+// ---------------------------------------------------------------------------
+// GitHub
+// ---------------------------------------------------------------------------
+
 export function syncGitHubInstallation(installationId: string | number) {
   return axios.post<GitHubInstallationSyncResponse>(
     `/github/installations/${encodeURIComponent(String(installationId))}/sync`,

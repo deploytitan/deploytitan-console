@@ -21,6 +21,7 @@ const apiRewriteSources: ApiRewriteSource[] = [
   "/billing/:path*",
   "/github/:path*",
   "/pull-requests/:path*",
+  "/release-packets/:path*",
   "/onboarding/signup",
 ];
 
