@@ -1,9 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname, useParams, useRouter } from "next/navigation";
-import { useAuth, useAccessToken } from "@workos-inc/authkit-nextjs/components";
-import { OrganizationSwitcher } from "@workos-inc/widgets";
+import { useParams, usePathname } from "next/navigation";
+import { useAuth } from "@workos-inc/authkit-nextjs/components";
 import { BrandLogo } from "@/components/ui/BrandLogo";
 import { ConnectionStatus } from "@/components/console/ConnectionStatus";
 import { ThemeToggle } from "@/components/ui/ThemeToggle";
@@ -12,25 +11,17 @@ import { cn } from "@/lib/utils";
 import { signOutAction } from "@/actions/auth";
 import { Menu } from "@base-ui/react/menu";
 import {
-  LayoutGrid,
-  Rocket,
-  ScrollText,
-  Activity,
-  GitPullRequest,
-  RotateCcw,
-  History,
-  Shield,
-  Plug2,
-  SlidersHorizontal,
-  Settings,
-  Zap,
+  Building2,
   ChevronLeft,
   ChevronUp,
+  LayoutGrid,
   LogOut,
   type LucideIcon,
+  Settings,
+  Shield,
 } from "lucide-react";
 import { queries } from "@deploytitan/zero-schema";
-import { useQuery, useZero } from "@rocicorp/zero/react";
+import { useQuery } from "@rocicorp/zero/react";
 
 type NavItem =
   | {
@@ -46,10 +37,14 @@ type NavItem =
       href: string;
       icon: LucideIcon;
       badge?: string;
+      exact?: boolean;
       items?: NavItem[];
     };
 
-const generateProjectNav = (orgId: string, projectPublicId: string): NavItem[] => [
+const generateProjectNav = (
+  orgId: string,
+  projectPublicId: string,
+): NavItem[] => [
   {
     label: "Project",
     type: "group",
@@ -83,6 +78,13 @@ const generateProjectNav = (orgId: string, projectPublicId: string): NavItem[] =
 const generateOrgNav = (orgId: string): NavItem[] => [
   {
     type: "item",
+    label: "Overview",
+    href: `/orgs/${orgId}`,
+    icon: Building2,
+    exact: true,
+  },
+  {
+    type: "item",
     label: "Project List",
     href: `/orgs/${orgId}/projects`,
     icon: LayoutGrid,
@@ -97,7 +99,7 @@ const generateOrgNav = (orgId: string): NavItem[] => [
 
 function SectionLabel({ children }: { children: React.ReactNode }) {
   return (
-    <span className="block px-3 mb-0.5 font-mono uppercase tracking-[0.08em] text-[9px] text-sidebar-foreground/40 select-none">
+    <span className="block px-3 mb-2 font-mono uppercase tracking-[0.08em] text-[9px] text-sidebar-foreground/40 select-none">
       {children}
     </span>
   );
@@ -174,7 +176,8 @@ function ProjectDisplay() {
 
 function NavGroupList({ navList }: { navList: NavItem[] }) {
   const pathname = usePathname();
-  const isActive = (href: string) => pathname.includes(href);
+  const isActive = (href: string, exact?: boolean) =>
+    exact ? pathname === href : pathname.includes(href);
 
   return navList.map((nav) => {
     if (nav.type === "item") {
@@ -185,14 +188,14 @@ function NavGroupList({ navList }: { navList: NavItem[] }) {
           icon={nav.icon}
           label={nav.label}
           badge={nav.badge}
-          active={isActive(nav.href)}
+          active={isActive(nav.href, nav.exact)}
         />
       );
     }
     return (
       <div key={nav.label}>
         <SectionLabel>{nav.label}</SectionLabel>
-        <div className="space-y-0.5">
+        <div className="space-y-1">
           {nav.items.map((item) =>
             item.type === "group" ? (
               <NavGroupList key={item.label} navList={item.items} />
@@ -203,7 +206,7 @@ function NavGroupList({ navList }: { navList: NavItem[] }) {
                 icon={item.icon}
                 label={item.label}
                 badge={item.badge}
-                active={isActive(item.href)}
+                active={isActive(item.href, item.exact)}
               />
             ),
           )}
@@ -251,11 +254,11 @@ export function ConsoleSidebar() {
       )}
 
       {/* Nav — scrollable */}
-      <nav className="flex-1 overflow-y-auto py-4 px-3 space-y-5">
+      <nav className="flex-1 overflow-y-auto py-4 px-3 space-y-2">
         {projectPublicId && (
           <Link
             href={`/orgs/${orgId}/projects`}
-            className="flex items-center gap-1.5 px-3 py-2 text-[12px] text-sidebar-foreground/50 hover:text-sidebar-foreground transition-colors duration-100 rounded-[4px] hover:bg-sidebar-accent/70"
+            className="flex items-center gap-1.5 px-3 py-2 mb-4 text-[12px] text-sidebar-foreground/50 hover:text-sidebar-foreground transition-colors duration-100 rounded-lg hover:bg-sidebar-accent/70"
           >
             <ChevronLeft className="size-3.5 shrink-0" strokeWidth={1.75} />
             All Projects
