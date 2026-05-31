@@ -54,7 +54,7 @@ export function ZeroSchemaMismatchScreen({ message }: { message?: string }) {
                   Action
                 </dt>
                 <dd className="text-ink-secondary dark:text-[var(--color-ink-secondary)]">
-                  Reset the production Zero cache Cloud Run revision, then refresh.
+                  A new version of DeployTitan is being rolled out. This usually resolves within a few minutes — click Retry to check again.
                 </dd>
               </div>
             </dl>

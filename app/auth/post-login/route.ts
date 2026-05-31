@@ -32,5 +32,5 @@ export const GET = async () => {
     redirect(`/orgs/${organizationId}`);
   }
 
-  redirect("/");
+  redirect("/onboarding");
 };

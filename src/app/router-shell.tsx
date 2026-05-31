@@ -1,20 +1,17 @@
 "use client";
 
-import { ReactNode, Suspense, useRef } from "react";
+import { ReactNode, Suspense } from "react";
 import {
   QueryClient,
   QueryClientProvider,
   useQuery,
 } from "@tanstack/react-query";
-import { ZeroProvider } from "@rocicorp/zero/react";
 
 import { ThemeProvider } from "@/contexts/ThemeContext";
 import { initGrafanaFaro } from "@/lib/grafanaFaro";
 import { installFrontendTelemetry } from "@/lib/frontendTelemetry";
-import { createZero } from "@/zero/provider";
 import {
   AuthKitProvider,
-  useAccessToken,
   useAuth,
 } from "@workos-inc/authkit-nextjs/components";
 import { ConnectionStatus } from "@/components/console/ConnectionStatus";
@@ -35,7 +32,6 @@ export const queryClient = new QueryClient({
     mutations: { retry: false },
   },
 });
-
 
 function FrontendTelemetryBootstrap() {
   const { user } = useAuth();

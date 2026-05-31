@@ -29,6 +29,7 @@ const nextConfig: NextConfig = {
   experimental: {
     globalNotFound: true,
   },
+  productionBrowserSourceMaps: true,
   async rewrites() {
     if (!apiOrigin) return [];
 
