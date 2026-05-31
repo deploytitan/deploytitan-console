@@ -15,10 +15,10 @@ export const ZERO_SERVER: string = publicEnv.NEXT_PUBLIC_ZERO_SERVER || "";
 export const GRAFANA_FARO_URL: string =
   publicEnv.NEXT_PUBLIC_GRAFANA_FARO_URL ?? "";
 
-export const GRAFANA_FARO_API_KEY: string =
-  publicEnv.NEXT_PUBLIC_GRAFANA_FARO_API_KEY ?? "";
-
 export const GRAFANA_FARO_APP_NAME: string =
   publicEnv.NEXT_PUBLIC_GRAFANA_FARO_APP_NAME ?? "";
+
+export const GRAFANA_FARO_APP_ENV: string =
+  publicEnv.NEXT_PUBLIC_VERCEL_ENV ?? "preview";
 
 export const GRAFANA_FARO_ENABLED: boolean = GRAFANA_FARO_URL.length > 0;

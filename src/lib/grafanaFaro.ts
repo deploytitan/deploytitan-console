@@ -1,6 +1,6 @@
 import type { Faro } from "@grafana/faro-web-sdk";
 import {
-  GRAFANA_FARO_API_KEY,
+  GRAFANA_FARO_APP_ENV,
   GRAFANA_FARO_APP_NAME,
   GRAFANA_FARO_ENABLED,
   GRAFANA_FARO_URL,
@@ -36,10 +36,9 @@ export function initGrafanaFaro(): Promise<Faro | null> {
 
         initializeFaro({
           url: GRAFANA_FARO_URL,
-          ...(GRAFANA_FARO_API_KEY ? { apiKey: GRAFANA_FARO_API_KEY } : {}),
           app: {
             name: GRAFANA_FARO_APP_NAME,
-            environment: process.env.NODE_ENV || "production",
+            environment: GRAFANA_FARO_APP_ENV,
           },
           instrumentations: [
             ...getWebInstrumentations({
