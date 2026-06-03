@@ -237,9 +237,9 @@
   --signal-danger-text: #b91c1c;
   --signal-deploy-text: #1d4ed8;
 
-  /* Console UX radius: 4px — precise but approachable.
-     Retains engineered character without clinical sharpness. */
-  --radius: 0.25rem;
+  /* Console UX radius: 8px — precise and approachable.
+     Soft enough to feel human; sharp enough to feel engineered. */
+  --radius: 0.5rem;
 
   /* Sidebar: surface-alt background, surface-step hover/active (Vercel-style tint, no amber fill) */
   --sidebar: var(--color-surface-alt);
