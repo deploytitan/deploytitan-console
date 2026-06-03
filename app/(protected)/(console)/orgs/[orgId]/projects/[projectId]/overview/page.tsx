@@ -64,11 +64,11 @@ function SectionLabel({
 }) {
   return (
     <div className="flex items-center gap-2 mb-2">
-      <span className="font-mono text-[9px] tracking-[0.08em] uppercase text-muted-foreground/50">
+      <span className="font-mono text-[9px] tracking-[0.08em] uppercase text-text-tertiary">
         {children}
       </span>
       {count !== undefined && (
-        <span className="font-mono text-[9px] tracking-[0.06em] text-muted-foreground/35">
+        <span className="font-mono text-[9px] tracking-[0.06em] text-text-tertiary">
           {count}
         </span>
       )}
@@ -84,7 +84,7 @@ function EmptySection({ message }: { message: string }) {
       className="flex items-center justify-center py-8 border border-border border-dashed"
       style={{ borderRadius: "4px" }}
     >
-      <p className="text-[12px] text-muted-foreground/50">{message}</p>
+      <p className="text-[12px] text-text-tertiary">{message}</p>
     </div>
   );
 }
@@ -162,7 +162,7 @@ function InstallationBadge({ status }: { status: string | null }) {
   }
   return (
     <span
-      className="inline-flex items-center font-mono text-[8px] tracking-[0.06em] uppercase px-1.5 py-px text-muted-foreground/50 bg-muted/50 border border-border"
+      className="inline-flex items-center font-mono text-[8px] tracking-[0.06em] uppercase px-1.5 py-px text-text-tertiary bg-muted/50 border border-border"
       style={{ borderRadius: "1px" }}
     >
       {s}
@@ -174,19 +174,19 @@ function RepoRow({ repo }: { repo: Repository }) {
   return (
     <div className="group flex items-center gap-3 px-5 py-3 border-b border-border last:border-b-0 hover:bg-muted/40 transition-colors duration-100">
       <GitFork
-        className="size-3.5 shrink-0 text-muted-foreground/40"
+        className="size-3.5 shrink-0 text-text-tertiary"
         strokeWidth={1.5}
       />
       <div className="min-w-0 flex-1">
         <span className="font-mono text-[12px] text-foreground tracking-tight">
           {repo.repoOwner}
-          <span className="text-muted-foreground/40">/</span>
+          <span className="text-text-tertiary">/</span>
           {repo.repoName}
         </span>
       </div>
       <div className="flex items-center gap-2 shrink-0">
         {repo.defaultBranch && (
-          <span className="hidden sm:flex items-center gap-1 font-mono text-[9px] tracking-[0.04em] text-muted-foreground/40">
+          <span className="hidden sm:flex items-center gap-1 font-mono text-[9px] tracking-[0.04em] text-text-tertiary">
             <GitBranch className="size-2.5" strokeWidth={1.75} />
             {repo.defaultBranch}
           </span>
@@ -264,7 +264,7 @@ function StateBadge({ state, draft }: { state: string | null; draft: boolean | n
   if (draft) {
     return (
       <span
-        className="inline-flex items-center font-mono text-[8px] tracking-[0.06em] uppercase px-1.5 py-px text-muted-foreground/60 bg-muted/60 border border-border"
+        className="inline-flex items-center font-mono text-[8px] tracking-[0.06em] uppercase px-1.5 py-px text-text-tertiary bg-muted/60 border border-border"
         style={{ borderRadius: "1px" }}
       >
         draft
@@ -274,7 +274,7 @@ function StateBadge({ state, draft }: { state: string | null; draft: boolean | n
   if (state === "closed") {
     return (
       <span
-        className="inline-flex items-center font-mono text-[8px] tracking-[0.06em] uppercase px-1.5 py-px text-muted-foreground/40 bg-muted/40 border border-border"
+        className="inline-flex items-center font-mono text-[8px] tracking-[0.06em] uppercase px-1.5 py-px text-text-tertiary bg-muted/40 border border-border"
         style={{ borderRadius: "1px" }}
       >
         closed
@@ -288,12 +288,12 @@ function PrRow({ pr, repoName }: { pr: PullRequest; repoName: string }) {
   const content = (
     <div className="group flex items-start gap-3 px-5 py-3 border-b border-border last:border-b-0 hover:bg-muted/40 transition-colors duration-100 cursor-pointer">
       <GitPullRequest
-        className="size-3.5 shrink-0 mt-px text-muted-foreground/40"
+        className="size-3.5 shrink-0 mt-px text-text-tertiary"
         strokeWidth={1.5}
       />
       <div className="min-w-0 flex-1">
         <div className="flex items-center gap-2 flex-wrap">
-          <span className="font-mono text-[9px] text-muted-foreground/50 shrink-0">
+          <span className="font-mono text-[9px] text-text-tertiary shrink-0">
             #{pr.prNumber}
           </span>
           <p className="text-[13px] text-foreground truncate leading-snug min-w-0 flex-1">
@@ -301,13 +301,13 @@ function PrRow({ pr, repoName }: { pr: PullRequest; repoName: string }) {
           </p>
         </div>
         <div className="mt-0.5 flex items-center gap-2 flex-wrap">
-          <span className="font-mono text-[9px] tracking-[0.04em] text-muted-foreground/40">
+          <span className="font-mono text-[9px] tracking-[0.04em] text-text-tertiary">
             {repoName}
           </span>
           {pr.authorLogin && (
             <>
               <span className="text-border select-none" aria-hidden>·</span>
-              <span className="font-mono text-[9px] text-muted-foreground/40">
+              <span className="font-mono text-[9px] text-text-tertiary">
                 {pr.authorLogin}
               </span>
             </>
@@ -318,14 +318,14 @@ function PrRow({ pr, repoName }: { pr: PullRequest; repoName: string }) {
         <StateBadge state={pr.state} draft={pr.draft} />
         <MergeStatusBadge status={pr.mergeStatus} />
         {pr.updatedAt && (
-          <span className="hidden sm:flex items-center gap-1 font-mono text-[9px] text-muted-foreground/35">
+          <span className="hidden sm:flex items-center gap-1 font-mono text-[9px] text-text-tertiary">
             <Clock className="size-2.5" strokeWidth={1.75} />
             {formatRelativeTime(pr.updatedAt)}
           </span>
         )}
         {pr.htmlUrl && (
           <ExternalLink
-            className="size-3 text-muted-foreground/25 group-hover:text-muted-foreground/50 transition-colors duration-100 shrink-0"
+            className="size-3 text-text-disabled group-hover:text-text-tertiary transition-colors duration-100 shrink-0"
             strokeWidth={1.5}
           />
         )}
@@ -418,7 +418,7 @@ export default function OverviewPage() {
               Overview
             </h1>
             {project && (
-              <p className="mt-1 font-mono text-[9px] tracking-[0.08em] uppercase text-muted-foreground/50">
+              <p className="mt-1 font-mono text-[9px] tracking-[0.08em] uppercase text-text-tertiary">
                 {project.id}
               </p>
             )}
@@ -441,7 +441,7 @@ export default function OverviewPage() {
                 </p>
                 <div className="flex items-center gap-2.5 mt-1.5">
                   {project.createdAt && (
-                    <span className="font-mono text-[10px] tracking-[0.04em] text-muted-foreground/60">
+                    <span className="font-mono text-[10px] tracking-[0.04em] text-text-tertiary">
                       Created {formatDate(project.createdAt)}
                     </span>
                   )}
@@ -463,14 +463,14 @@ export default function OverviewPage() {
               className="group flex items-center gap-3 px-5 py-3.5 bg-background border-b border-border last:border-b-0 hover:bg-muted/50 transition-colors duration-100"
             >
               <Shield
-                className="size-4 text-muted-foreground/50 group-hover:text-muted-foreground transition-colors duration-100 shrink-0"
+                className="size-4 text-text-tertiary group-hover:text-muted-foreground transition-colors duration-100 shrink-0"
                 strokeWidth={1.5}
               />
               <div className="min-w-0 flex-1">
                 <p className="text-[13px] font-medium text-foreground leading-none">
                   Policies
                 </p>
-                <p className="mt-0.5 text-[11px] text-muted-foreground/60 leading-relaxed">
+                <p className="mt-0.5 text-[11px] text-text-tertiary leading-relaxed">
                   Release gates, freeze windows, and approval rules for this project
                 </p>
               </div>

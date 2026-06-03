@@ -1,12 +1,12 @@
 'use client'
 
 const colorMap = {
-  success: '#22c55e',
-  warning: '#f59e0b',
-  danger: '#ef4444',
-  deploy: '#3b82f6',
-  gold: '#c9a84c',
-  neutral: '#b5aea6',
+  success: 'var(--color-signal-success)',
+  warning: 'var(--color-signal-warning)',
+  danger: 'var(--color-signal-danger)',
+  deploy: 'var(--color-signal-deploy)',
+  gold: 'var(--color-primary)',
+  neutral: 'var(--color-ink-quaternary)',
 }
 
 interface StatusDotProps {
@@ -25,7 +25,9 @@ export function StatusDot({ status, pulse, glow, size = 'sm' }: StatusDotProps) 
       style={{
         borderRadius: '0.5px',
         backgroundColor: color,
-        boxShadow: glow ? `0 0 6px ${color}40` : undefined,
+        boxShadow: glow
+          ? `0 0 6px color-mix(in srgb, ${color} 25%, transparent)`
+          : undefined,
         animation: pulse ? 'pulse-anim 1.5s infinite' : undefined,
       }}
     />

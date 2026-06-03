@@ -62,29 +62,29 @@ const mergeStatusCfg: Record<
 > = {
   pending: {
     label: "pending",
-    cls: "text-muted-foreground/50 bg-muted/50 border-border",
+    cls: "text-text-tertiary bg-muted/50 border-border",
   },
   checking: {
     label: "checking",
-    cls: "text-signal-deploy bg-signal-deploy/8 border-signal-deploy/25",
+    cls: "text-signal-deploy-text bg-signal-deploy/8 border-signal-deploy/25",
     spin: true,
   },
   merging: {
     label: "merging",
-    cls: "text-signal-warning bg-signal-warning/8 border-signal-warning/25",
+    cls: "text-signal-warning-text bg-signal-warning/8 border-signal-warning/25",
     spin: true,
   },
   merged: {
     label: "merged",
-    cls: "text-signal-success bg-signal-success/8 border-signal-success/25",
+    cls: "text-signal-success-text bg-signal-success/8 border-signal-success/25",
   },
   failed: {
     label: "failed",
-    cls: "text-signal-danger bg-signal-danger/8 border-signal-danger/25",
+    cls: "text-signal-danger-text bg-signal-danger/8 border-signal-danger/25",
   },
   blocked: {
     label: "blocked",
-    cls: "text-signal-warning bg-signal-warning/8 border-signal-warning/25",
+    cls: "text-signal-warning-text bg-signal-warning/8 border-signal-warning/25",
   },
 };
 
@@ -120,7 +120,7 @@ function StateBadge({
   if (draft)
     return (
       <span
-        className="font-mono text-[8px] tracking-[0.06em] uppercase px-1.5 py-px text-muted-foreground/50 bg-muted/50 border border-border"
+        className="font-mono text-[8px] tracking-[0.06em] uppercase px-1.5 py-px text-text-tertiary bg-muted/50 border border-border"
         style={{ borderRadius: "1px" }}
       >
         draft
@@ -129,7 +129,7 @@ function StateBadge({
   if (state === "open")
     return (
       <span
-        className="font-mono text-[8px] tracking-[0.06em] uppercase px-1.5 py-px text-signal-success bg-signal-success/8 border border-signal-success/25"
+        className="font-mono text-[8px] tracking-[0.06em] uppercase px-1.5 py-px text-signal-success-text bg-signal-success/8 border border-signal-success/25"
         style={{ borderRadius: "1px" }}
       >
         open
@@ -138,7 +138,7 @@ function StateBadge({
   if (state === "closed")
     return (
       <span
-        className="font-mono text-[8px] tracking-[0.06em] uppercase px-1.5 py-px text-muted-foreground/40 bg-muted/40 border border-border"
+        className="font-mono text-[8px] tracking-[0.06em] uppercase px-1.5 py-px text-text-tertiary bg-muted/40 border border-border"
         style={{ borderRadius: "1px" }}
       >
         closed
@@ -150,11 +150,11 @@ function StateBadge({
 // ── Packet status badge ───────────────────────────────────────────────────────
 
 const packetStatusCfg: Record<PacketStatus, { label: string; cls: string }> = {
-  draft: { label: "Draft", cls: "text-muted-foreground/60 bg-muted/50 border-border" },
-  ready: { label: "Ready", cls: "text-signal-success bg-signal-success/8 border-signal-success/25" },
-  merging: { label: "Merging", cls: "text-signal-deploy bg-signal-deploy/8 border-signal-deploy/25" },
-  merged: { label: "Merged", cls: "text-signal-success bg-signal-success/8 border-signal-success/25" },
-  failed: { label: "Failed", cls: "text-signal-danger bg-signal-danger/8 border-signal-danger/25" },
+  draft: { label: "Draft", cls: "text-text-tertiary bg-muted/50 border-border" },
+  ready: { label: "Ready", cls: "text-signal-success-text bg-signal-success/8 border-signal-success/25" },
+  merging: { label: "Merging", cls: "text-signal-deploy-text bg-signal-deploy/8 border-signal-deploy/25" },
+  merged: { label: "Merged", cls: "text-signal-success-text bg-signal-success/8 border-signal-success/25" },
+  failed: { label: "Failed", cls: "text-signal-danger-text bg-signal-danger/8 border-signal-danger/25" },
 };
 
 function PacketStatusBadge({ status }: { status: PacketStatus }) {
@@ -221,7 +221,7 @@ function EditableName({
         setDraft(value);
         setEditing(true);
       }}
-      className="text-[17px] font-semibold text-foreground tracking-tight leading-none hover:text-foreground/80 transition-colors text-left group"
+      className="text-[17px] font-semibold text-foreground tracking-tight leading-none hover:text-foreground transition-colors text-left group"
       title="Click to rename"
     >
       {value}
@@ -279,11 +279,11 @@ function PRPoolPanel({
   return (
     <div className="flex flex-col h-full border-r border-border">
       <div className="shrink-0 px-4 py-3 border-b border-border">
-        <p className="font-mono text-[9px] tracking-[0.08em] uppercase text-muted-foreground/50 mb-2">
+        <p className="font-mono text-[9px] tracking-[0.08em] uppercase text-text-tertiary mb-2">
           PR Pool
         </p>
         <div className="relative">
-          <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 size-3 text-muted-foreground/40" />
+          <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 size-3 text-text-tertiary" />
           <input
             value={search}
             onChange={(e) => setSearch(e.target.value)}
@@ -291,7 +291,7 @@ function PRPoolPanel({
             className={cn(
               "w-full pl-7 pr-3 py-1.5 text-[12px] text-foreground bg-muted/40",
               "border border-border focus:border-primary/40 outline-none",
-              "placeholder:text-muted-foreground/35 transition-colors duration-100",
+              "placeholder:text-text-tertiary transition-colors duration-100",
             )}
             style={{ borderRadius: "2px" }}
           />
@@ -311,7 +311,7 @@ function PRPoolPanel({
           </div>
         ) : filtered.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-32 px-4">
-            <p className="text-[11px] text-muted-foreground/40 text-center">
+            <p className="text-[11px] text-text-tertiary text-center">
               {search ? "No matching PRs" : "All project PRs are in the packet"}
             </p>
           </div>
@@ -325,7 +325,7 @@ function PRPoolPanel({
                 style={{ borderRadius: "2px" }}
               >
                 <GitPullRequest
-                  className="size-3.5 shrink-0 text-muted-foreground/40 mt-0.5"
+                  className="size-3.5 shrink-0 text-text-tertiary mt-0.5"
                   strokeWidth={1.75}
                 />
                 <div className="min-w-0 flex-1">
@@ -333,18 +333,18 @@ function PRPoolPanel({
                     {pr.title || `PR #${pr.prNumber}`}
                   </p>
                   <div className="flex items-center gap-1.5 mt-0.5">
-                    <span className="font-mono text-[9px] text-muted-foreground/50 tracking-[0.04em]">
+                    <span className="font-mono text-[9px] text-text-tertiary tracking-[0.04em]">
                       #{pr.prNumber}
                     </span>
                     {pr.sourceBranch && (
-                      <span className="font-mono text-[9px] text-muted-foreground/40 tracking-[0.04em] truncate">
+                      <span className="font-mono text-[9px] text-text-tertiary tracking-[0.04em] truncate">
                         {pr.sourceBranch}
                       </span>
                     )}
                   </div>
                 </div>
                 <Plus
-                  className="size-3.5 shrink-0 text-muted-foreground/30 group-hover:text-primary transition-colors duration-100 mt-0.5"
+                  className="size-3.5 shrink-0 text-text-disabled group-hover:text-primary transition-colors duration-100 mt-0.5"
                   strokeWidth={2}
                 />
               </button>
@@ -389,7 +389,7 @@ function PRRow({
       )}
     >
       <div className="flex flex-col items-center gap-1 pt-0.5 shrink-0">
-        <span className="font-mono text-[9px] text-muted-foreground/35 leading-none">
+        <span className="font-mono text-[9px] text-text-tertiary leading-none">
           {String(index + 1).padStart(2, "0")}
         </span>
       </div>
@@ -405,17 +405,17 @@ function PRRow({
           )}
         </div>
         <div className="flex items-center gap-2.5 mt-1">
-          <span className="font-mono text-[9px] tracking-[0.04em] text-muted-foreground/50">
+          <span className="font-mono text-[9px] tracking-[0.04em] text-text-tertiary">
             #{pr.prNumber}
           </span>
           {pr.sourceBranch && (
-            <span className="flex items-center gap-1 font-mono text-[9px] tracking-[0.04em] text-muted-foreground/40">
+            <span className="flex items-center gap-1 font-mono text-[9px] tracking-[0.04em] text-text-tertiary">
               <GitBranch className="size-2.5" strokeWidth={1.75} />
               {pr.sourceBranch}
             </span>
           )}
           {pr.authorLogin && (
-            <span className="font-mono text-[9px] text-muted-foreground/35 tracking-[0.04em]">
+            <span className="font-mono text-[9px] text-text-tertiary tracking-[0.04em]">
               {pr.authorLogin}
             </span>
           )}
@@ -426,7 +426,7 @@ function PRRow({
             target="_blank"
             rel="noopener noreferrer"
             onClick={(e) => e.stopPropagation()}
-            className="inline-flex items-center gap-1 font-mono text-[9px] text-muted-foreground/35 hover:text-primary transition-colors mt-0.5"
+            className="inline-flex items-center gap-1 font-mono text-[9px] text-text-tertiary hover:text-primary transition-colors mt-0.5"
           >
             View on GitHub
             <ExternalLink className="size-2.5" strokeWidth={1.75} />
@@ -439,7 +439,7 @@ function PRRow({
           e.stopPropagation();
           onRemove();
         }}
-        className="shrink-0 p-1 text-muted-foreground/30 hover:text-signal-danger transition-colors duration-100 opacity-0 group-hover:opacity-100"
+        className="shrink-0 p-1 text-text-disabled hover:text-signal-danger-text transition-colors duration-100 opacity-0 group-hover:opacity-100"
         aria-label="Remove from packet"
       >
         <X className="size-3.5" strokeWidth={1.75} />
@@ -473,11 +473,11 @@ function DependencyPanel({
           style={{ borderRadius: "4px" }}
         >
           <GitMerge
-            className="size-4 text-muted-foreground/40"
+            className="size-4 text-text-tertiary"
             strokeWidth={1.5}
           />
         </div>
-        <p className="text-[12px] text-muted-foreground/50 leading-relaxed">
+        <p className="text-[12px] text-text-tertiary leading-relaxed">
           Select a PR from the packet to configure its dependencies
         </p>
       </div>
@@ -497,13 +497,13 @@ function DependencyPanel({
   return (
     <div className="flex flex-col h-full border-l border-border">
       <div className="shrink-0 px-4 py-3 border-b border-border">
-        <p className="font-mono text-[9px] tracking-[0.08em] uppercase text-muted-foreground/50 mb-1.5">
+        <p className="font-mono text-[9px] tracking-[0.08em] uppercase text-text-tertiary mb-1.5">
           Dependencies
         </p>
         <p className="text-[12px] text-foreground font-medium truncate">
           {pr.title || `PR #${pr.prNumber}`}
         </p>
-        <p className="font-mono text-[9px] text-muted-foreground/40 mt-0.5">
+        <p className="font-mono text-[9px] text-text-tertiary mt-0.5">
           must wait for:
         </p>
       </div>
@@ -526,7 +526,7 @@ function DependencyPanel({
                   style={{ borderRadius: "2px" }}
                 >
                   <CheckCircle2
-                    className="size-3 shrink-0 text-signal-success/60"
+                    className="size-3 shrink-0 text-signal-success-text"
                     strokeWidth={2}
                   />
                   <span className="text-[11px] text-foreground font-medium min-w-0 flex-1 truncate">
@@ -534,7 +534,7 @@ function DependencyPanel({
                   </span>
                   <button
                     onClick={() => onRemoveDep(dep.id)}
-                    className="shrink-0 text-muted-foreground/30 hover:text-signal-danger transition-colors"
+                    className="shrink-0 text-text-disabled hover:text-signal-danger-text transition-colors"
                     aria-label="Remove dependency"
                   >
                     <Minus className="size-3" strokeWidth={2} />
@@ -548,7 +548,7 @@ function DependencyPanel({
         {/* Addable prerequisites */}
         {eligible.length > 0 && (
           <div className="px-3 pb-3 space-y-1">
-            <p className="font-mono text-[8px] tracking-[0.06em] uppercase text-muted-foreground/35 px-0 py-1.5">
+            <p className="font-mono text-[8px] tracking-[0.06em] uppercase text-text-tertiary px-0 py-1.5">
               Add prerequisite
             </p>
             {eligible.map((e) => (
@@ -559,10 +559,10 @@ function DependencyPanel({
                 style={{ borderRadius: "2px" }}
               >
                 <Plus
-                  className="size-3 shrink-0 text-muted-foreground/30"
+                  className="size-3 shrink-0 text-text-disabled"
                   strokeWidth={2}
                 />
-                <span className="text-[11px] text-foreground/70 min-w-0 flex-1 truncate">
+                <span className="text-[11px] text-foreground min-w-0 flex-1 truncate">
                   #{e.pr.prNumber} {e.pr.title}
                 </span>
               </button>
@@ -572,7 +572,7 @@ function DependencyPanel({
 
         {prerequisites.length === 0 && eligible.length === 0 && (
           <div className="flex items-center justify-center h-20 px-4">
-            <p className="text-[11px] text-muted-foreground/40 text-center">
+            <p className="text-[11px] text-text-tertiary text-center">
               No other PRs in the packet
             </p>
           </div>
@@ -580,7 +580,7 @@ function DependencyPanel({
 
         {prerequisites.length === 0 && eligible.length > 0 && (
           <div className="px-4 pb-2">
-            <p className="text-[11px] text-muted-foreground/40">
+            <p className="text-[11px] text-text-tertiary">
               No prerequisites — this PR can merge immediately.
             </p>
           </div>
@@ -651,11 +651,11 @@ function DAGView({
               className="w-5 h-5 flex items-center justify-center bg-muted/60 border border-border"
               style={{ borderRadius: "2px" }}
             >
-              <span className="font-mono text-[8px] text-muted-foreground/50">
+              <span className="font-mono text-[8px] text-text-tertiary">
                 {li + 1}
               </span>
             </div>
-            <span className="font-mono text-[8px] uppercase tracking-[0.06em] text-muted-foreground/40">
+            <span className="font-mono text-[8px] uppercase tracking-[0.06em] text-text-tertiary">
               Wave {li + 1}
             </span>
           </div>
@@ -670,7 +670,7 @@ function DAGView({
                   className="w-[200px] border border-border bg-background px-3 py-2.5"
                   style={{ borderRadius: "4px" }}
                 >
-                  <p className="font-mono text-[9px] text-muted-foreground/50 tracking-[0.04em]">
+                  <p className="font-mono text-[9px] text-text-tertiary tracking-[0.04em]">
                     #{e.pr.prNumber}
                   </p>
                   <p className="text-[11px] text-foreground font-medium leading-snug mt-0.5 line-clamp-2">
@@ -709,7 +709,7 @@ function MergeLog({
   return (
     <div className="mt-4 border border-border bg-muted/20" style={{ borderRadius: "4px" }}>
       <div className="px-4 py-2.5 border-b border-border">
-        <p className="font-mono text-[9px] tracking-[0.08em] uppercase text-muted-foreground/50">
+        <p className="font-mono text-[9px] tracking-[0.08em] uppercase text-text-tertiary">
           Merge queue — {jobs.length} PRs queued
         </p>
       </div>
@@ -719,14 +719,14 @@ function MergeLog({
           const pr = entry?.pr;
           return (
             <div key={job.pullRequestId} className="flex items-center gap-3 px-4 py-2.5">
-              <span className="font-mono text-[9px] text-muted-foreground/35 w-4 shrink-0">
+              <span className="font-mono text-[9px] text-text-tertiary w-4 shrink-0">
                 {String(i + 1).padStart(2, "0")}
               </span>
               <MergeStatusBadge status={pr?.mergeStatus ?? "pending"} />
               <span className="text-[12px] text-foreground min-w-0 flex-1 truncate">
                 {pr?.title || `PR #${job.prNumber}`}
               </span>
-              <span className="font-mono text-[9px] text-muted-foreground/40 shrink-0">
+              <span className="font-mono text-[9px] text-text-tertiary shrink-0">
                 #{job.prNumber}
               </span>
             </div>
@@ -746,7 +746,7 @@ export default function ReleaseDetailPage() {
 
   const orgId = params?.orgId as string;
   const projectPublicId = params?.projectId as string;
-  const releaseId = params?.releaseId as string;
+  const releasePublicId = params?.releaseId as string;
 
   // Data queries
   const [project] = useQuery(
@@ -754,11 +754,13 @@ export default function ReleaseDetailPage() {
   );
 
   const [packet] = useQuery(
-    queries.releasePacketById({ id: releaseId }),
+    queries.releasePacketByPublicId({ publicId: releasePublicId }),
   );
 
+  const releasePacketId = packet?.id ?? "";
+
   const [packetPrRows, packetPrsStatus] = useQuery(
-    queries.releasePacketPrsByPacketId({ releasePacketId: releaseId }),
+    queries.releasePacketPrsByPacketId({ releasePacketId }),
   );
 
   // Load all deps for this project, then filter client-side to packet members.
@@ -861,9 +863,10 @@ export default function ReleaseDetailPage() {
 
   // Mutations
   async function handleAddPR(pr: PR) {
+    if (!packet) return;
     await z.mutate(mutators.releasePacketPr.add({
       id: generateId(),
-      releasePacketId: releaseId,
+      releasePacketId: packet.id,
       pullRequestId: pr.id,
     })).client;
   }
@@ -901,16 +904,18 @@ export default function ReleaseDetailPage() {
   }
 
   async function handleRename(name: string) {
-    await z.mutate(mutators.releasePacket.update({ id: releaseId, name })).client;
+    if (!packet) return;
+    await z.mutate(mutators.releasePacket.update({ id: packet.id, name })).client;
   }
 
   async function handleStatusChange(status: PacketStatus) {
-    await z.mutate(mutators.releasePacket.update({ id: releaseId, status })).client;
+    if (!packet) return;
+    await z.mutate(mutators.releasePacket.update({ id: packet.id, status })).client;
   }
 
   // Merge all mutation
   const mergeAllMutation = useMutation({
-    mutationFn: () => mergeAllReleasePacket(releaseId),
+    mutationFn: () => mergeAllReleasePacket(packet?.id ?? ""),
     onSuccess: (res) => {
       setMergeLog(res.data.jobs);
     },
@@ -929,7 +934,7 @@ export default function ReleaseDetailPage() {
             className="mx-auto mb-4 size-10 bg-muted/60 animate-pulse"
             style={{ borderRadius: "4px" }}
           />
-          <p className="text-[13px] text-muted-foreground/50">
+          <p className="text-[13px] text-text-tertiary">
             Loading packet...
           </p>
         </div>
@@ -947,7 +952,7 @@ export default function ReleaseDetailPage() {
             onClick={() =>
               router.push(`/orgs/${orgId}/projects/${projectPublicId}/releases`)
             }
-            className="shrink-0 flex items-center gap-1.5 text-[12px] text-muted-foreground/60 hover:text-foreground transition-colors duration-100"
+            className="shrink-0 flex items-center gap-1.5 text-[12px] text-text-tertiary hover:text-foreground transition-colors duration-100"
           >
             <ArrowLeft className="size-3.5" strokeWidth={1.75} />
             Releases
@@ -972,7 +977,7 @@ export default function ReleaseDetailPage() {
                 "px-3 py-1.5 text-[11px] font-medium transition-colors duration-100",
                 viewMode === "edit"
                   ? "bg-muted text-foreground"
-                  : "text-muted-foreground/60 hover:text-foreground hover:bg-muted/50",
+                  : "text-text-tertiary hover:text-foreground hover:bg-muted/50",
               )}
             >
               Edit
@@ -983,7 +988,7 @@ export default function ReleaseDetailPage() {
                 "px-3 py-1.5 text-[11px] font-medium transition-colors duration-100 border-l border-border",
                 viewMode === "dag"
                   ? "bg-muted text-foreground"
-                  : "text-muted-foreground/60 hover:text-foreground hover:bg-muted/50",
+                  : "text-text-tertiary hover:text-foreground hover:bg-muted/50",
               )}
             >
               DAG
@@ -994,7 +999,7 @@ export default function ReleaseDetailPage() {
           {packet.status === "draft" && (
             <button
               onClick={() => handleStatusChange("ready")}
-              className="shrink-0 text-[11px] text-signal-success hover:text-signal-success/80 transition-colors font-medium"
+              className="shrink-0 text-[11px] text-signal-success-text hover:text-signal-success-text transition-colors font-medium"
             >
               Mark ready
             </button>
@@ -1032,8 +1037,8 @@ export default function ReleaseDetailPage() {
         {/* Error banner */}
         {mergeAllMutation.isError && (
           <div className="flex items-center gap-2 mt-3 px-3 py-2 bg-signal-danger/5 border border-signal-danger/20" style={{ borderRadius: "2px" }}>
-            <AlertTriangle className="size-3.5 shrink-0 text-signal-danger" strokeWidth={1.75} />
-            <p className="text-[12px] text-signal-danger">
+            <AlertTriangle className="size-3.5 shrink-0 text-signal-danger-text" strokeWidth={1.75} />
+            <p className="text-[12px] text-signal-danger-text">
               {mergeAllMutation.error instanceof Error
                 ? mergeAllMutation.error.message
                 : "Merge failed. Check individual PR statuses."}
@@ -1045,7 +1050,7 @@ export default function ReleaseDetailPage() {
       {/* DAG view */}
       {viewMode === "dag" ? (
         <div className="flex-1 overflow-auto p-6">
-          <p className="font-mono text-[9px] tracking-[0.08em] uppercase text-muted-foreground/50 mb-4">
+          <p className="font-mono text-[9px] tracking-[0.08em] uppercase text-text-tertiary mb-4">
             Merge order — read-only view
           </p>
           {packetEntries.length === 0 ? (
@@ -1053,7 +1058,7 @@ export default function ReleaseDetailPage() {
               className="flex items-center justify-center py-16 border border-border border-dashed"
               style={{ borderRadius: "4px" }}
             >
-              <p className="text-[12px] text-muted-foreground/40">
+              <p className="text-[12px] text-text-tertiary">
                 Add PRs in the Edit view to see the merge graph
               </p>
             </div>
@@ -1082,16 +1087,16 @@ export default function ReleaseDetailPage() {
           {/* Center: packet PR list */}
           <div className="flex flex-col overflow-hidden">
             <div className="shrink-0 px-5 py-3 border-b border-border flex items-center justify-between">
-              <p className="font-mono text-[9px] tracking-[0.08em] uppercase text-muted-foreground/50">
+              <p className="font-mono text-[9px] tracking-[0.08em] uppercase text-text-tertiary">
                 In this packet
                 {packetEntries.length > 0 && (
-                  <span className="ml-1.5 text-muted-foreground/35">
+                  <span className="ml-1.5 text-text-tertiary">
                     {packetEntries.length}
                   </span>
                 )}
               </p>
               {packetEntries.length > 0 && (
-                <p className="font-mono text-[9px] text-muted-foreground/35">
+                <p className="font-mono text-[9px] text-text-tertiary">
                   Click a PR to set dependencies
                 </p>
               )}
@@ -1111,13 +1116,13 @@ export default function ReleaseDetailPage() {
               ) : packetEntries.length === 0 ? (
                 <div className="flex flex-col items-center justify-center h-full pb-16 px-6 text-center">
                   <GitPullRequest
-                    className="size-6 text-muted-foreground/25 mb-3"
+                    className="size-6 text-text-disabled mb-3"
                     strokeWidth={1.5}
                   />
-                  <p className="text-[13px] font-medium text-foreground/60 mb-1">
+                  <p className="text-[13px] font-medium text-foreground mb-1">
                     No PRs in this packet
                   </p>
-                  <p className="text-[11px] text-muted-foreground/40 leading-relaxed">
+                  <p className="text-[11px] text-text-tertiary leading-relaxed">
                     Add PRs from the pool on the left
                   </p>
                 </div>
@@ -1156,7 +1161,7 @@ export default function ReleaseDetailPage() {
             deps={deps}
             onAddDep={handleAddDep}
             onRemoveDep={handleRemoveDep}
-            releasePacketId={releaseId}
+            releasePacketId={releasePacketId}
           />
         </div>
       )}

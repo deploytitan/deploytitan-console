@@ -46,9 +46,9 @@ export function UserAvatar({
         width={dim}
         height={dim}
         style={{
-        borderRadius: '4px',
-        objectFit: 'cover',
-        border: '1px solid #e7e5e4',
+          borderRadius: '4px',
+          objectFit: 'cover',
+          border: '1px solid var(--color-line)',
           display: 'block',
         }}
       />
@@ -63,14 +63,14 @@ export function UserAvatar({
         width: dim,
         height: dim,
         borderRadius: '4px',
-        background: '#c9a84c20',
-        border: '1px solid #c9a84c40',
+        background: 'color-mix(in srgb, var(--color-primary) 12%, transparent)',
+        border: '1px solid color-mix(in srgb, var(--color-primary) 25%, transparent)',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
         fontSize,
         fontFamily: 'var(--font-mono, monospace)',
-        color: '#c9a84c',
+        color: 'var(--color-primary-accessible)',
         fontWeight: 600,
         letterSpacing: '0.04em',
         flexShrink: 0,

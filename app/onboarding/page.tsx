@@ -42,7 +42,7 @@ export default function OnboardingPage() {
 
   return (
     <div className="dark">
-      <main className="relative min-h-screen flex flex-col items-center justify-center overflow-hidden bg-[#0d0c0a] blueprint-grid">
+      <main className="relative min-h-screen flex flex-col items-center justify-center overflow-hidden bg-surface blueprint-grid">
         {/* Amber scan line */}
         <div className="login-scan-line" aria-hidden="true" />
 
@@ -52,7 +52,7 @@ export default function OnboardingPage() {
           aria-hidden="true"
           style={{
             background:
-              "radial-gradient(ellipse 70% 60% at 50% 50%, transparent 30%, rgba(13,12,10,0.6) 100%)",
+              "radial-gradient(ellipse 70% 60% at 50% 50%, transparent 30%, color-mix(in srgb, var(--color-surface) 60%, transparent) 100%)",
           }}
         />
 
@@ -64,7 +64,7 @@ export default function OnboardingPage() {
 
           {/* Step label */}
           <p
-            className="font-mono text-[0.625rem] tracking-[0.22em] uppercase text-[#d4b454]/50 animate-fade-in"
+            className="font-mono text-[0.625rem] tracking-[0.22em] uppercase text-primary animate-fade-in"
             style={{ animationDelay: "60ms" }}
           >
             Step 1 of 1 · Create your organization
@@ -79,7 +79,7 @@ export default function OnboardingPage() {
             <div className="flex flex-col gap-1.5">
               <label
                 htmlFor="org-name"
-                className="font-mono text-[0.625rem] tracking-[0.18em] uppercase text-[#8a8078]"
+                className="font-mono text-[0.625rem] tracking-[0.18em] uppercase text-muted-foreground"
               >
                 Organization name
               </label>
@@ -92,12 +92,12 @@ export default function OnboardingPage() {
                 autoFocus
                 autoComplete="organization"
                 disabled={isPending}
-                className="w-full rounded-[2px] border border-[#2a2825] bg-[#111009] px-4 py-3 text-[0.8125rem] text-[#f5f4f1] placeholder-[#3a3830] outline-none transition-all duration-200 focus:border-[rgba(212,180,84,0.4)] focus:shadow-[0_0_0_3px_rgba(212,180,84,0.08)] disabled:opacity-50"
+                className="w-full rounded-[2px] border border-border bg-surface-alt px-4 py-3 text-[0.8125rem] text-foreground placeholder:text-text-disabled outline-none transition-all duration-200 focus:border-primary/40 focus:shadow-[0_0_0_3px_color-mix(in_srgb,var(--color-primary)_8%,transparent)] disabled:opacity-50"
               />
             </div>
 
             {error && (
-              <p className="font-mono text-[0.625rem] tracking-[0.08em] text-red-400/80">
+              <p className="font-mono text-[0.625rem] tracking-[0.08em] text-signal-danger-text">
                 {error}
               </p>
             )}
@@ -105,7 +105,7 @@ export default function OnboardingPage() {
             <button
               type="submit"
               disabled={isPending || !orgName.trim()}
-              className="mt-1 inline-flex items-center justify-center rounded-[2px] bg-[#f5f4f1] px-8 py-4 text-[0.8125rem] font-medium tracking-wide text-[#0d0c0a] transition-all duration-200 hover:shadow-[0_0_0_1px_rgba(212,180,84,0.3),0_2px_12px_rgba(0,0,0,0.3)] disabled:cursor-not-allowed disabled:opacity-40"
+              className="mt-1 inline-flex items-center justify-center rounded-[2px] bg-primary px-8 py-4 text-[0.8125rem] font-medium tracking-wide text-primary-foreground transition-all duration-200 hover:shadow-[0_0_0_1px_color-mix(in_srgb,var(--color-primary)_30%,transparent),0_2px_12px_color-mix(in_srgb,var(--color-surface)_70%,transparent)] disabled:cursor-not-allowed disabled:opacity-40"
             >
               {isPending ? "Creating…" : "Create organization"}
             </button>
@@ -113,11 +113,11 @@ export default function OnboardingPage() {
 
           {/* Invite hint */}
           <p
-            className="text-[#3a3830] text-[0.6875rem] tracking-[0.02em] text-center leading-relaxed animate-fade-in"
+            className="text-text-disabled text-[0.6875rem] tracking-[0.02em] text-center leading-relaxed animate-fade-in"
             style={{ animationDelay: "200ms" }}
           >
             Joining an existing org?{" "}
-            <span className="text-[#5a5650]">
+            <span className="text-muted-foreground">
               Ask your admin to send you an invite.
             </span>
           </p>
@@ -128,7 +128,7 @@ export default function OnboardingPage() {
           className="absolute bottom-6 right-6 animate-fade-in"
           style={{ animationDelay: "300ms" }}
         >
-          <span className="font-mono text-[0.5625rem] tracking-[0.14em] uppercase text-[#2a2825]">
+          <span className="font-mono text-[0.5625rem] tracking-[0.14em] uppercase text-text-disabled">
             Titan Rollouts
           </span>
         </div>

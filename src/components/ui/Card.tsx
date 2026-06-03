@@ -14,7 +14,7 @@ export function Card({ children, className, onClick }: CardProps) {
     <div
       className={cn(
         "relative border border-line bg-surface p-6 group transition-all duration-300",
-        "hover:border-gold/30 hover:shadow-[0_2px_12px_rgba(0,0,0,0.04),0_0_0_1px_rgba(201,168,76,0.08)]",
+        "card-hover-brand",
         "spotlight-card overflow-hidden",
         onClick && "cursor-pointer",
         className,
