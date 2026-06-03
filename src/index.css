@@ -132,6 +132,14 @@
   --font-heading: var(--font-sans);
   --font-sans: 'Geist Variable', sans-serif;
   --font-mono: var(--font-jetbrains-mono, 'JetBrains Mono'), monospace;
+  --color-text-primary: var(--foreground);
+  --color-text-secondary: var(--muted-foreground);
+  --color-text-tertiary: var(--color-ink-tertiary);
+  --color-text-disabled: var(--color-ink-quaternary);
+  --color-signal-success-text: var(--signal-success-text);
+  --color-signal-warning-text: var(--signal-warning-text);
+  --color-signal-danger-text: var(--signal-danger-text);
+  --color-signal-deploy-text: var(--signal-deploy-text);
   --color-sidebar-ring: var(--sidebar-ring);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
@@ -180,105 +188,117 @@
    ========================================================================== */
 :root {
   /* Surface / background */
-  --background: #fafaf9;
-  --foreground: #1a1512;
+  --background: var(--color-surface);
+  --foreground: var(--color-ink);
 
   /* Cards / popovers sit on surface-alt for subtle lift */
-  --card: #fafaf9;
-  --card-foreground: #1a1512;
-  --popover: #fafaf9;
-  --popover-foreground: #1a1512;
+  --card: var(--color-surface);
+  --card-foreground: var(--color-ink);
+  --popover: var(--color-surface);
+  --popover-foreground: var(--color-ink);
 
   /* Primary: ink fill, surface text — same as DeployTitan button-primary */
-  --primary: #1a1512;
-  --primary-foreground: #fafaf9;
+  --primary: var(--color-ink);
+  --primary-foreground: var(--color-surface);
 
   /* Secondary: surface-alt */
-  --secondary: #f5f4f1;
-  --secondary-foreground: #1a1512;
+  --secondary: var(--color-surface-alt);
+  --secondary-foreground: var(--color-ink);
 
-  /* Muted: the quaternary ink layer */
-  --muted: #f5f4f1;
-  --muted-foreground: #6b6059;
+  /* Muted: readable supporting text, not opacity-reduced foreground. */
+  --muted: var(--color-surface-alt);
+  --muted-foreground: var(--color-ink-tertiary);
 
   /* Accent: amber muted fill, amber-tinged text */
-  --accent: rgba(201, 168, 76, 0.10);
-  --accent-foreground: #a68a3e;
+  --accent: color-mix(in srgb, var(--color-primary) 10%, transparent);
+  --accent-foreground: var(--color-primary-accessible);
 
   /* Destructive: danger signal */
-  --destructive: #ef4444;
+  --destructive: var(--color-signal-danger-text);
 
   /* Borders & inputs: fine line */
-  --border: #e5e2dc;
-  --input: #e5e2dc;
+  --border: var(--color-line);
+  --input: var(--color-line);
 
   /* Ring: amber for focus, matching DeployTitan focus state */
-  --ring: #c9a84c;
+  --ring: var(--color-primary);
 
   /* Charts: use signal colors */
-  --chart-1: #3b82f6;
-  --chart-2: #22c55e;
-  --chart-3: #f59e0b;
-  --chart-4: #ef4444;
-  --chart-5: #c9a84c;
+  --chart-1: var(--color-signal-deploy);
+  --chart-2: var(--color-signal-success);
+  --chart-3: var(--color-signal-warning);
+  --chart-4: var(--color-signal-danger);
+  --chart-5: var(--color-primary);
 
-  /* Console UX radius: 4px — precise but approachable.
-     Retains engineered character without clinical sharpness. */
-  --radius: 0.25rem;
+  /* Signal text tokens copied from deploytitan-landing-page design tokens.
+     Base signal colors can stay for fills, borders, and icons; text uses these. */
+  --signal-success-text: #166534;
+  --signal-warning-text: #92400e;
+  --signal-danger-text: #b91c1c;
+  --signal-deploy-text: #1d4ed8;
+
+  /* Console UX radius: 8px — precise and approachable.
+     Soft enough to feel human; sharp enough to feel engineered. */
+  --radius: 0.5rem;
 
   /* Sidebar: surface-alt background, surface-step hover/active (Vercel-style tint, no amber fill) */
-  --sidebar: #f5f4f1;
-  --sidebar-foreground: #1a1512;
-  --sidebar-primary: #1a1512;
-  --sidebar-primary-foreground: #fafaf9;
-  --sidebar-accent: #e5e2dc;
-  --sidebar-accent-foreground: #1a1512;
-  --sidebar-border: #e5e2dc;
-  --sidebar-ring: #c9a84c;
+  --sidebar: var(--color-surface-alt);
+  --sidebar-foreground: var(--color-ink);
+  --sidebar-primary: var(--color-ink);
+  --sidebar-primary-foreground: var(--color-surface);
+  --sidebar-accent: var(--color-line);
+  --sidebar-accent-foreground: var(--color-ink);
+  --sidebar-border: var(--color-line);
+  --sidebar-ring: var(--color-primary);
 }
 
 .dark {
-  --background: #0d0c0a;
-  --foreground: #f5f4f1;
+  --background: var(--color-surface);
+  --foreground: var(--color-ink);
 
-  --card: #161512;
-  --card-foreground: #f5f4f1;
-  --popover: #161512;
-  --popover-foreground: #f5f4f1;
+  --card: var(--color-surface-alt);
+  --card-foreground: var(--color-ink);
+  --popover: var(--color-surface-alt);
+  --popover-foreground: var(--color-ink);
 
-  --primary: #f5f4f1;
-  --primary-foreground: #0d0c0a;
+  --primary: var(--color-ink);
+  --primary-foreground: var(--color-surface);
 
-  --secondary: #2a2825;
-  --secondary-foreground: #f5f4f1;
+  --secondary: var(--color-line);
+  --secondary-foreground: var(--color-ink);
 
-  --muted: #2a2825;
-  --muted-foreground: #8a8078;
+  --muted: var(--color-line);
+  --muted-foreground: var(--color-ink-tertiary);
 
-  --accent: rgba(212, 180, 84, 0.10);
-  --accent-foreground: #d4b454;
+  --accent: color-mix(in srgb, var(--color-primary) 10%, transparent);
+  --accent-foreground: var(--color-primary);
 
-  --destructive: #f87171;
+  --destructive: var(--color-signal-danger-text);
 
-  --border: #2a2825;
-  --input: #2a2825;
+  --border: var(--color-line);
+  --input: var(--color-line);
 
-  --ring: #d4b454;
+  --ring: var(--color-primary);
 
-  --chart-1: #60a5fa;
-  --chart-2: #4ade80;
-  --chart-3: #fbbf24;
-  --chart-4: #f87171;
-  --chart-5: #d4b454;
+  --chart-1: var(--color-signal-deploy);
+  --chart-2: var(--color-signal-success);
+  --chart-3: var(--color-signal-warning);
+  --chart-4: var(--color-signal-danger);
+  --chart-5: var(--color-primary);
 
-  --sidebar: #161512;
-  --sidebar-foreground: #f5f4f1;
-  --sidebar-primary: #d4b454;
-  --sidebar-primary-foreground: #0d0c0a;
-  --sidebar-accent: #2a2825;
-  --sidebar-accent-foreground: #f5f4f1;
-  --sidebar-border: #2a2825;
-  --sidebar-ring: #d4b454;
+  --signal-success-text: var(--color-signal-success);
+  --signal-warning-text: var(--color-signal-warning);
+  --signal-danger-text: var(--color-signal-danger);
+  --signal-deploy-text: var(--color-signal-deploy);
+
+  --sidebar: var(--color-surface-alt);
+  --sidebar-foreground: var(--color-ink);
+  --sidebar-primary: var(--color-primary);
+  --sidebar-primary-foreground: var(--color-surface);
+  --sidebar-accent: var(--color-line);
+  --sidebar-accent-foreground: var(--color-ink);
+  --sidebar-border: var(--color-line);
+  --sidebar-ring: var(--color-primary);
 }
 
 @layer base {
@@ -290,6 +310,15 @@
   }
   html {
     @apply font-sans;
+  }
+}
+
+@utility card-hover-brand {
+  &:hover {
+    border-color: color-mix(in srgb, var(--color-gold) 30%, transparent);
+    box-shadow:
+      0 2px 12px color-mix(in srgb, var(--color-ink) 4%, transparent),
+      0 0 0 1px color-mix(in srgb, var(--color-primary) 8%, transparent);
   }
 }
 
@@ -319,61 +348,61 @@
 /* Base toast shell */
 .dt-toast {
   border-radius: 2px !important;
-  background: var(--color-surface, #fafaf9) !important;
-  border: 1px solid var(--color-line, #e5e2dc) !important;
-  color: var(--color-ink, #1a1512) !important;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06), 0 0 0 1px rgba(26, 21, 18, 0.04) !important;
+  background: var(--color-surface) !important;
+  border: 1px solid var(--color-line) !important;
+  color: var(--color-ink) !important;
+  box-shadow: 0 2px 8px color-mix(in srgb, var(--color-ink) 6%, transparent), 0 0 0 1px color-mix(in srgb, var(--color-ink) 4%, transparent) !important;
 }
 
 .dark .dt-toast {
-  background: var(--color-dark-surface-alt, #161512) !important;
-  border-color: var(--color-dark-line, #2a2825) !important;
-  color: var(--color-dark-ink, #f5f4f1) !important;
-  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.3), 0 0 0 1px rgba(255, 255, 255, 0.04) !important;
+  background: var(--color-surface-alt) !important;
+  border-color: var(--color-line) !important;
+  color: var(--color-ink) !important;
+  box-shadow: 0 2px 12px color-mix(in srgb, var(--color-surface) 70%, transparent), 0 0 0 1px color-mix(in srgb, var(--color-ink) 4%, transparent) !important;
 }
 
 /* Error variant */
 .dt-toast--error {
-  border-color: rgba(239, 68, 68, 0.25) !important;
-  background: rgba(239, 68, 68, 0.04) !important;
+  border-color: color-mix(in srgb, var(--color-signal-danger) 25%, transparent) !important;
+  background: color-mix(in srgb, var(--color-signal-danger) 4%, transparent) !important;
 }
 
 .dark .dt-toast--error {
-  border-color: rgba(248, 113, 113, 0.2) !important;
-  background: rgba(248, 113, 113, 0.06) !important;
+  border-color: color-mix(in srgb, var(--color-signal-danger) 20%, transparent) !important;
+  background: color-mix(in srgb, var(--color-signal-danger) 6%, transparent) !important;
 }
 
 /* Success variant */
 .dt-toast--success {
-  border-color: rgba(34, 197, 94, 0.25) !important;
-  background: rgba(34, 197, 94, 0.04) !important;
+  border-color: color-mix(in srgb, var(--color-signal-success) 25%, transparent) !important;
+  background: color-mix(in srgb, var(--color-signal-success) 4%, transparent) !important;
 }
 
 .dark .dt-toast--success {
-  border-color: rgba(74, 222, 128, 0.2) !important;
-  background: rgba(74, 222, 128, 0.06) !important;
+  border-color: color-mix(in srgb, var(--color-signal-success) 20%, transparent) !important;
+  background: color-mix(in srgb, var(--color-signal-success) 6%, transparent) !important;
 }
 
 /* Warning variant */
 .dt-toast--warning {
-  border-color: rgba(245, 158, 11, 0.25) !important;
-  background: rgba(245, 158, 11, 0.04) !important;
+  border-color: color-mix(in srgb, var(--color-signal-warning) 25%, transparent) !important;
+  background: color-mix(in srgb, var(--color-signal-warning) 4%, transparent) !important;
 }
 
 .dark .dt-toast--warning {
-  border-color: rgba(251, 191, 36, 0.2) !important;
-  background: rgba(251, 191, 36, 0.06) !important;
+  border-color: color-mix(in srgb, var(--color-signal-warning) 20%, transparent) !important;
+  background: color-mix(in srgb, var(--color-signal-warning) 6%, transparent) !important;
 }
 
 /* Info variant */
 .dt-toast--info {
-  border-color: rgba(59, 130, 246, 0.25) !important;
-  background: rgba(59, 130, 246, 0.04) !important;
+  border-color: color-mix(in srgb, var(--color-signal-deploy) 25%, transparent) !important;
+  background: color-mix(in srgb, var(--color-signal-deploy) 4%, transparent) !important;
 }
 
 .dark .dt-toast--info {
-  border-color: rgba(96, 165, 250, 0.2) !important;
-  background: rgba(96, 165, 250, 0.06) !important;
+  border-color: color-mix(in srgb, var(--color-signal-deploy) 20%, transparent) !important;
+  background: color-mix(in srgb, var(--color-signal-deploy) 6%, transparent) !important;
 }
 
 /* Entrance animation — use existing fadeUp */
@@ -405,19 +434,19 @@
   --radius-3: 4px !important;
   --radius-4: 4px !important;
   /* Remap gray tokens so trigger surface/text match the sidebar */
-  --gray-a3: color-mix(in srgb, var(--sidebar-foreground, #1a1512) 7%, transparent) !important;
-  --gray-a4: color-mix(in srgb, var(--sidebar-foreground, #1a1512) 11%, transparent) !important;
-  --gray-a7: color-mix(in srgb, var(--sidebar-foreground, #1a1512) 22%, transparent) !important;
-  --gray-11: var(--sidebar-foreground, #1a1512) !important;
-  --gray-12: var(--sidebar-foreground, #1a1512) !important;
+  --gray-a3: color-mix(in srgb, var(--sidebar-foreground) 7%, transparent) !important;
+  --gray-a4: color-mix(in srgb, var(--sidebar-foreground) 11%, transparent) !important;
+  --gray-a7: color-mix(in srgb, var(--sidebar-foreground) 22%, transparent) !important;
+  --gray-11: var(--sidebar-foreground) !important;
+  --gray-12: var(--sidebar-foreground) !important;
 }
 
 .dark .woswidgets-root {
-  --gray-a3: color-mix(in srgb, var(--sidebar-foreground, #f5f4f1) 7%, transparent) !important;
-  --gray-a4: color-mix(in srgb, var(--sidebar-foreground, #f5f4f1) 11%, transparent) !important;
-  --gray-a7: color-mix(in srgb, var(--sidebar-foreground, #f5f4f1) 22%, transparent) !important;
-  --gray-11: var(--sidebar-foreground, #f5f4f1) !important;
-  --gray-12: var(--sidebar-foreground, #f5f4f1) !important;
+  --gray-a3: color-mix(in srgb, var(--sidebar-foreground) 7%, transparent) !important;
+  --gray-a4: color-mix(in srgb, var(--sidebar-foreground) 11%, transparent) !important;
+  --gray-a7: color-mix(in srgb, var(--sidebar-foreground) 22%, transparent) !important;
+  --gray-11: var(--sidebar-foreground) !important;
+  --gray-12: var(--sidebar-foreground) !important;
 }
 
 /* ── Trigger button ───────────────────────────────────────────────────────── */
@@ -431,7 +460,7 @@
   line-height: 1.25rem !important;
   font-family: 'Geist Variable', sans-serif !important;
   font-weight: 500 !important;
-  color: var(--sidebar-foreground, #1a1512) !important;
+  color: var(--sidebar-foreground) !important;
   background: transparent !important;
   border: none !important;
   box-shadow: none !important;
@@ -441,15 +470,15 @@
 }
 
 .OrganizationSwitcherTrigger:hover {
-  background: var(--sidebar-accent, #e5e2dc) !important;
+  background: var(--sidebar-accent) !important;
 }
 
 .dark .OrganizationSwitcherTrigger {
-  color: var(--sidebar-foreground, #f5f4f1) !important;
+  color: var(--sidebar-foreground) !important;
 }
 
 .dark .OrganizationSwitcherTrigger:hover {
-  background: var(--sidebar-accent, #2a2825) !important;
+  background: var(--sidebar-accent) !important;
 }
 
 /* Inner flex row — no wrapping, truncate org name */
@@ -511,10 +540,10 @@
 .woswidgets-dropdown {
   width: var(--radix-dropdown-menu-trigger-width) !important;
   min-width: var(--radix-dropdown-menu-trigger-width) !important;
-  background: var(--popover, #fafaf9) !important;
-  border: 1px solid var(--border, #e5e2dc) !important;
+  background: var(--popover) !important;
+  border: 1px solid var(--border) !important;
   border-radius: 4px !important;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08), 0 1px 4px rgba(0, 0, 0, 0.04) !important;
+  box-shadow: 0 4px 16px color-mix(in srgb, var(--color-ink) 8%, transparent), 0 1px 4px color-mix(in srgb, var(--color-ink) 4%, transparent) !important;
   padding: 0.25rem !important;
   font-family: 'Geist Variable', sans-serif !important;
   /* Override Radix Themes' own shadow-5 */
@@ -522,9 +551,9 @@
 }
 
 .dark .woswidgets-dropdown {
-  background: var(--popover, #161512) !important;
-  border-color: var(--border, #2a2825) !important;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.45), 0 1px 4px rgba(0, 0, 0, 0.25) !important;
+  background: var(--popover) !important;
+  border-color: var(--border) !important;
+  box-shadow: 0 4px 20px color-mix(in srgb, var(--color-surface) 80%, transparent), 0 1px 4px color-mix(in srgb, var(--color-surface) 70%, transparent) !important;
 }
 
 /* "Organizations" label */
@@ -535,7 +564,7 @@
   /*font-weight: 600 !important;*/
   /*letter-spacing: 0.06em !important;*/
   text-transform: uppercase !important;
-  color: var(--muted-foreground, #6b6059) !important;
+  color: var(--muted-foreground) !important;
   /*font-family: 'Geist Variable', sans-serif !important;*/
   /*line-height: 1.5 !important;*/
   @apply truncate font-display text-[8px] tracking-widest;
@@ -557,7 +586,7 @@
   line-height: 1.25rem !important;
   font-weight: 400 !important;
   font-family: 'Geist Variable', sans-serif !important;
-  color: var(--foreground, #1a1512) !important;
+  color: var(--foreground) !important;
   cursor: pointer !important;
   transition: background 100ms ease !important;
   outline: none !important;
@@ -565,17 +594,17 @@
 }
 
 .dark .woswidgets-menu-item {
-  color: var(--foreground, #f5f4f1) !important;
+  color: var(--foreground) !important;
 }
 
 .woswidgets-menu-item[data-highlighted] {
-  background: rgba(201, 168, 76, 0.10) !important;
-  color: var(--foreground, #1a1512) !important;
+  background: color-mix(in srgb, var(--color-primary) 10%, transparent) !important;
+  color: var(--foreground) !important;
 }
 
 .dark .woswidgets-menu-item[data-highlighted] {
-  background: rgba(212, 180, 84, 0.10) !important;
-  color: var(--foreground, #f5f4f1) !important;
+  background: color-mix(in srgb, var(--color-primary) 10%, transparent) !important;
+  color: var(--foreground) !important;
 }
 
 /* Inner flex row — no wrap, keep name and icon on one line */
@@ -616,11 +645,11 @@
   width: 14px !important;
   height: 14px !important;
   flex-shrink: 0 !important;
-  color: var(--ring, #c9a84c) !important;
+  color: var(--ring) !important;
 }
 
 .dark .woswidgets-menu-item svg {
-  color: var(--ring, #d4b454) !important;
+  color: var(--ring) !important;
 }
 
 /* Strip any leftover Radix focus ring on items */

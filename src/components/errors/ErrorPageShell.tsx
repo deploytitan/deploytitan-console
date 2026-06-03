@@ -118,17 +118,17 @@ function ScopeBackground({ path, dark }: { path: string; dark: boolean }) {
   const vLines = Array.from({ length: 11 }, (_, i) => ((i + 1) / 12) * vw);
   const display = path.length > 48 ? path.slice(0, 46) + "…" : path;
 
-  const bg = dark ? "#0d0c0a" : "#f5f4f1";
-  const gridLine = dark ? "#2a2825" : "#d8d3cc";
-  const midLine = dark ? "#3a3830" : "#c8c2b8";
-  const traceMain = dark ? "#c9a84c" : "#a68a3e";
-  const traceGlow = "#c9a84c";
-  const ghost1Col = "#c9a84c";
-  const ghost2Col = dark ? "#d4b454" : "#a68a3e";
-  const labelCol = dark ? "#4a453e" : "#9e9189";
-  const noSigCol = dark ? "#c9a84c" : "#a68a3e";
-  const dotCol = dark ? "#c9a84c" : "#a68a3e";
-  const scanColor = dark ? "#c9a84c" : "#a68a3e";
+  const bg = "var(--color-surface)";
+  const gridLine = "var(--color-line)";
+  const midLine = "var(--color-ink-quaternary)";
+  const traceMain = "var(--color-primary-accessible)";
+  const traceGlow = "var(--color-primary)";
+  const ghost1Col = "var(--color-primary)";
+  const ghost2Col = "var(--color-primary-accessible)";
+  const labelCol = "var(--color-ink-quaternary)";
+  const noSigCol = "var(--color-primary-accessible)";
+  const dotCol = "var(--color-primary-accessible)";
+  const scanColor = "var(--color-primary-accessible)";
   const scanOp = dark ? "0.18" : "0.10";
 
   return (
@@ -233,7 +233,7 @@ function ScopeBackground({ path, dark }: { path: string; dark: boolean }) {
               y="0"
               width={vw}
               height="1"
-              fill={dark ? "rgba(0,0,0,0.18)" : "rgba(200,194,184,0.25)"}
+              fill="color-mix(in srgb, var(--color-ink-quaternary) 20%, transparent)"
             />
           </pattern>
           <filter id="sc-noise">
@@ -464,15 +464,14 @@ function SignalPage({
   variant,
   errorMessage,
 }: PageProps) {
-  const bg = dark ? "#0d0c0a" : "#f5f4f1";
-  const textPrimary = dark ? "#f5f4f1" : "#1a1512";
-  const textSecond = dark ? "#8a8078" : "#6b6059";
-  const textMono = dark ? "#c8c2b8" : "#3d3530";
-  const amber = dark ? "#c9a84c" : "#7a6530";
-  const amberFaint = dark ? "#8a8078" : "#6b6059";
-  const topLine = dark
-    ? "linear-gradient(90deg,transparent,rgba(201,168,76,0.4),transparent)"
-    : "linear-gradient(90deg,transparent,rgba(166,138,62,0.3),transparent)";
+  const bg = "var(--color-surface)";
+  const textPrimary = "var(--color-ink)";
+  const textSecond = "var(--color-ink-tertiary)";
+  const textMono = "var(--color-ink-secondary)";
+  const amber = "var(--color-primary-accessible)";
+  const amberFaint = "var(--color-ink-tertiary)";
+  const topLine =
+    "linear-gradient(90deg,transparent,color-mix(in srgb,var(--color-primary) 35%,transparent),transparent)";
 
   const incidentCode = variant === "not-found" ? "INC-404" : "INC-500";
   const headline =
@@ -577,8 +576,8 @@ function SignalPage({
                   borderColor: `${amber}4d`,
                   color: textPrimary,
                   background: dark
-                    ? "rgba(201,168,76,0.06)"
-                    : "rgba(166,138,62,0.06)",
+                    ? "color-mix(in srgb, var(--color-primary) 6%, transparent)"
+                    : "color-mix(in srgb, var(--color-primary-accessible) 6%, transparent)",
                 }}
               >
                 {primaryAction.label}
@@ -646,16 +645,14 @@ function Field({
   label,
   children,
   ruled = true,
-  dark,
 }: {
   label: string;
   children: React.ReactNode;
   ruled?: boolean;
-  dark: boolean;
 }) {
-  const ruleLine = dark ? "#2a2825" : "#e5e2dc";
-  const labelCol = dark ? "#8a8078" : "#6b6059";
-  const textCol = dark ? "#d8d2c8" : "#1a1512";
+  const ruleLine = "var(--color-line)";
+  const labelCol = "var(--color-ink-tertiary)";
+  const textCol = "var(--color-ink)";
   return (
     <div
       style={{
@@ -713,7 +710,6 @@ function IncidentReportModal({
   primaryAction,
   isLoading,
   isAuthenticated,
-  dark,
   onClose,
   variant,
   errorMessage,
@@ -722,7 +718,6 @@ function IncidentReportModal({
   primaryAction: Action | null;
   isLoading: boolean;
   isAuthenticated: boolean;
-  dark: boolean;
   onClose: () => void;
   variant: ErrorVariant;
   errorMessage?: string | undefined;
@@ -770,16 +765,16 @@ function IncidentReportModal({
     if (e.target === overlayRef.current) onClose();
   };
 
-  const cardBg = dark ? "#161512" : "#fafaf9";
-  const cardBorder = dark ? "#2a2825" : "#e5e2dc";
-  const headerBg = dark ? "#0a0907" : "#f5f4f1";
-  const headerText = dark ? "#f5f4f1" : "#1a1512";
-  const subLabel = dark ? "#6b6059" : "#6b6059";
-  const divider = dark ? "#2a2825" : "#e5e2dc";
-  const sectionLbl = dark ? "#8a8078" : "#6b6059";
-  const footerTxt = dark ? "#6b6059" : "#9e9189";
-  const amber = dark ? "#c9a84c" : "#7a6530";
-  const closeIcon = dark ? "#8a8078" : "#6b6059";
+  const cardBg = "var(--color-surface-alt)";
+  const cardBorder = "var(--color-line)";
+  const headerBg = "var(--color-surface)";
+  const headerText = "var(--color-ink)";
+  const subLabel = "var(--color-ink-tertiary)";
+  const divider = "var(--color-line)";
+  const sectionLbl = "var(--color-ink-tertiary)";
+  const footerTxt = "var(--color-ink-quaternary)";
+  const amber = "var(--color-primary-accessible)";
+  const closeIcon = "var(--color-ink-tertiary)";
 
   return (
     <>
@@ -798,7 +793,10 @@ function IncidentReportModal({
       <div
         ref={overlayRef}
         className="rpt-overlay fixed inset-0 z-40 flex items-end justify-center sm:items-center sm:px-6 sm:py-10"
-        style={{ background: "rgba(8,5,3,0.72)" }}
+        style={{
+          background:
+            "color-mix(in srgb, var(--color-surface) 72%, transparent)",
+        }}
         onClick={handleOverlayClick}
         role="dialog"
         aria-modal="true"
@@ -810,7 +808,8 @@ function IncidentReportModal({
             background: cardBg,
             border: `1px solid ${cardBorder}`,
             borderRadius: "2px 2px 0 0",
-            boxShadow: "0 -4px 40px rgba(0,0,0,0.5)",
+            boxShadow:
+              "0 -4px 40px color-mix(in srgb, var(--color-surface) 80%, transparent)",
           }}
         >
           <div style={{ height: "3px", background: amber, opacity: 0.9 }} />
@@ -882,19 +881,19 @@ function IncidentReportModal({
             </div>
 
             <div>
-              <Field label="Report date" dark={dark}>
+              <Field label="Report date">
                 {dateStr}
               </Field>
-              <Field label="Report time" dark={dark}>
+              <Field label="Report time">
                 {timeStr}
               </Field>
-              <Field label="Fault type" dark={dark}>
+              <Field label="Fault type">
                 {faultType}
               </Field>
-              <Field label="Origin" dark={dark}>
+              <Field label="Origin">
                 Client navigation
               </Field>
-              <Field label="Auth status" dark={dark} ruled={false}>
+              <Field label="Auth status" ruled={false}>
                 {authLine}
               </Field>
             </div>
@@ -908,32 +907,32 @@ function IncidentReportModal({
               >
                 Incident detail
               </p>
-              <Field label="Requested path" dark={dark}>
+              <Field label="Requested path">
                 <span className="break-all">{path}</span>
               </Field>
               {variant === "not-found" ? (
                 <>
-                  <Field label="Manifest" dark={dark}>
+                  <Field label="Manifest">
                     47 registered routes — no match found
                   </Field>
-                  <Field label="Fallback" dark={dark}>
+                  <Field label="Fallback">
                     Wildcard catch-all engaged
                   </Field>
-                  <Field label="State" dark={dark} ruled={false}>
+                  <Field label="State" ruled={false}>
                     Router context and auth tokens intact.
                   </Field>
                 </>
               ) : (
                 <>
                   {errorMessage && (
-                    <Field label="Error" dark={dark}>
+                    <Field label="Error">
                       <span className="break-all">{errorMessage}</span>
                     </Field>
                   )}
-                  <Field label="Boundary" dark={dark}>
+                  <Field label="Boundary">
                     React error boundary caught exception
                   </Field>
-                  <Field label="State" dark={dark} ruled={false}>
+                  <Field label="State" ruled={false}>
                     Router context and auth tokens intact.
                   </Field>
                 </>
@@ -1086,7 +1085,6 @@ export function ErrorPageShell({
           primaryAction={primaryAction}
           isLoading={isLoading}
           isAuthenticated={isAuthenticated}
-          dark={isDark}
           onClose={() => setReportOpen(false)}
           variant={variant}
           errorMessage={errorMessage}

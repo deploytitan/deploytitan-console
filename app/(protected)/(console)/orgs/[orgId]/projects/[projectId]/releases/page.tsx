@@ -5,7 +5,6 @@ import { useQuery, useZero } from "@rocicorp/zero/react";
 import { queries, mutators } from "@deploytitan/zero-schema";
 import {
   ArrowRight,
-  PackageCheck,
   Plus,
   Trash2,
   CheckCircle2,
@@ -48,27 +47,27 @@ const statusConfig: Record<
   draft: {
     label: "draft",
     icon: Clock,
-    cls: "text-muted-foreground/60 bg-muted/50 border-border",
+    cls: "text-text-tertiary bg-muted/50 border-border",
   },
   ready: {
     label: "ready",
     icon: CheckCircle2,
-    cls: "text-signal-success bg-signal-success/8 border-signal-success/25",
+    cls: "text-signal-success-text bg-signal-success/8 border-signal-success/25",
   },
   merging: {
     label: "merging",
     icon: Loader2,
-    cls: "text-signal-deploy bg-signal-deploy/8 border-signal-deploy/25",
+    cls: "text-signal-deploy-text bg-signal-deploy/8 border-signal-deploy/25",
   },
   merged: {
     label: "merged",
     icon: CheckCircle2,
-    cls: "text-signal-success bg-signal-success/8 border-signal-success/25",
+    cls: "text-signal-success-text bg-signal-success/8 border-signal-success/25",
   },
   failed: {
     label: "failed",
     icon: AlertTriangle,
-    cls: "text-signal-danger bg-signal-danger/8 border-signal-danger/25",
+    cls: "text-signal-danger-text bg-signal-danger/8 border-signal-danger/25",
   },
 };
 
@@ -95,14 +94,10 @@ function StatusBadge({ status }: { status: ReleasePacketStatus }) {
 
 function CreatePacketForm({
   projectId,
-  orgId,
-  projectPublicId,
   onCreated,
   onCancel,
 }: {
   projectId: string;
-  orgId: string;
-  projectPublicId: string;
   onCreated: (id: string) => void;
   onCancel: () => void;
 }) {
@@ -116,14 +111,15 @@ function CreatePacketForm({
     if (!name.trim() || busy) return;
     setBusy(true);
     const id = generateId();
+    const publicId = generatePublicId("rp");
     await z.mutate(mutators.releasePacket.create({
       id,
-      publicId: generatePublicId("rp"),
+      publicId,
       projectId,
       name: name.trim(),
       description: description.trim() || undefined,
     })).client;
-    onCreated(id);
+    onCreated(publicId);
   }
 
   return (
@@ -132,19 +128,19 @@ function CreatePacketForm({
       className="border border-border bg-muted/30 px-5 py-4 space-y-3"
       style={{ borderRadius: "4px" }}
     >
-      <p className="font-mono text-[9px] tracking-[0.08em] uppercase text-muted-foreground/50">
-        New release packet
+      <p className="font-mono text-[9px] tracking-[0.08em] uppercase text-text-tertiary">
+        New release
       </p>
       <div className="space-y-2">
         <input
           autoFocus
           value={name}
           onChange={(e) => setName(e.target.value)}
-          placeholder="Packet name"
+          placeholder="Release name"
           className={cn(
             "w-full px-3 py-2 text-[13px] text-foreground bg-background",
             "border border-border focus:border-primary/40 outline-none",
-            "placeholder:text-muted-foreground/40 transition-colors duration-100",
+            "placeholder:text-text-tertiary transition-colors duration-100",
           )}
           style={{ borderRadius: "2px" }}
           maxLength={120}
@@ -152,11 +148,11 @@ function CreatePacketForm({
         <input
           value={description}
           onChange={(e) => setDescription(e.target.value)}
-          placeholder="Description (optional)"
+          placeholder="Release summary (optional)"
           className={cn(
             "w-full px-3 py-2 text-[13px] text-foreground bg-background",
             "border border-border focus:border-primary/40 outline-none",
-            "placeholder:text-muted-foreground/40 transition-colors duration-100",
+            "placeholder:text-text-tertiary transition-colors duration-100",
           )}
           style={{ borderRadius: "2px" }}
           maxLength={280}
@@ -169,7 +165,7 @@ function CreatePacketForm({
           ) : (
             <Plus className="size-3.5" />
           )}
-          Create packet
+          Create release
         </Button>
         <Button
           type="button"
@@ -198,12 +194,12 @@ function DeleteConfirm({
 }) {
   return (
     <div className="flex items-center gap-3 px-3 py-2 bg-signal-danger/5 border border-signal-danger/20" style={{ borderRadius: "2px" }}>
-      <span className="text-[12px] text-foreground/80 min-w-0 flex-1">
+      <span className="text-[12px] text-foreground min-w-0 flex-1">
         Delete <span className="font-medium">{packetName}</span>?
       </span>
       <button
         onClick={onConfirm}
-        className="font-mono text-[10px] tracking-[0.06em] uppercase text-signal-danger hover:text-signal-danger/80 transition-colors"
+        className="font-mono text-[10px] tracking-[0.06em] uppercase text-signal-danger-text hover:text-signal-danger-text transition-colors"
       >
         Delete
       </button>
@@ -226,6 +222,7 @@ function PacketRow({
 }: {
   packet: {
     id: string;
+    publicId: string | null;
     name: string;
     status: string | null;
     createdAt: number | null;
@@ -242,7 +239,7 @@ function PacketRow({
     await z.mutate(mutators.releasePacket.delete({ id: packet.id })).client;
   }
 
-  const href = `/orgs/${orgId}/projects/${projectPublicId}/releases/${packet.id}`;
+  const href = `/orgs/${orgId}/projects/${projectPublicId}/releases/${packet.publicId ?? packet.id}`;
 
   if (confirming) {
     return (
@@ -268,7 +265,7 @@ function PacketRow({
           </p>
           <StatusBadge status={(packet.status ?? "draft") as ReleasePacketStatus} />
         </div>
-        <p className="mt-0.5 font-mono text-[10px] tracking-[0.04em] text-muted-foreground/55">
+        <p className="mt-0.5 font-mono text-[10px] tracking-[0.04em] text-text-tertiary">
           {packet.updatedAt
             ? `Updated ${formatDate(packet.updatedAt)}`
             : `Created ${formatDate(packet.createdAt)}`}
@@ -278,13 +275,13 @@ function PacketRow({
       <div className="flex items-center gap-1 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity duration-100">
         <button
           onClick={() => setConfirming(true)}
-          className="p-1.5 text-muted-foreground/40 hover:text-signal-danger transition-colors duration-100"
+          className="p-1.5 text-text-tertiary hover:text-signal-danger-text transition-colors duration-100"
           aria-label="Delete packet"
         >
           <Trash2 className="size-3.5" strokeWidth={1.75} />
         </button>
         <ArrowRight
-          className="size-3.5 text-muted-foreground/35 group-hover:translate-x-0.5 transition-all duration-100"
+          className="size-3.5 text-text-tertiary group-hover:translate-x-0.5 transition-all duration-100"
           strokeWidth={1.75}
         />
       </div>
@@ -327,8 +324,8 @@ export default function ReleasesPage() {
             <h1 className="text-[17px] font-semibold text-foreground tracking-tight leading-none">
               Releases
             </h1>
-            <p className="mt-1.5 font-mono text-[9px] tracking-[0.08em] uppercase text-muted-foreground/50">
-              Release packets for coordinated multi-PR merges
+            <p className="mt-1.5 font-mono text-[9px] tracking-[0.08em] uppercase text-text-tertiary">
+              Business-first release packets with scoped engineering detail
             </p>
           </div>
           <Button
@@ -337,7 +334,7 @@ export default function ReleasesPage() {
             disabled={showCreate}
           >
             <Plus className="size-3.5" />
-            New Packet
+            New release
           </Button>
         </div>
       </div>
@@ -348,8 +345,6 @@ export default function ReleasesPage() {
         {showCreate && project && (
           <CreatePacketForm
             projectId={project.id}
-            orgId={orgId}
-            projectPublicId={projectPublicId}
             onCreated={handleCreated}
             onCancel={() => setShowCreate(false)}
           />
@@ -379,25 +374,25 @@ export default function ReleasesPage() {
               style={{ borderRadius: "4px" }}
             >
               <PackageX
-                className="size-4 text-muted-foreground/60"
+                className="size-4 text-text-tertiary"
                 strokeWidth={1.5}
               />
             </div>
             <p className="mb-1 text-[14px] font-medium text-foreground tracking-tight">
-              No release packets
+              No releases yet
             </p>
             <p className="mb-5 text-[12px] text-muted-foreground text-center max-w-[280px] leading-relaxed">
-              A release packet groups multiple PRs for coordinated, dependency-aware merging in one action.
+              Create a release packet, shape the customer-facing story, then open each release item to map the pull requests behind it.
             </p>
             <Button size="sm" onClick={() => setShowCreate(true)}>
               <Plus className="size-3.5" />
-              New Packet
+              New release
             </Button>
           </div>
         ) : packets.length > 0 ? (
           <div>
-            <p className="font-mono text-[9px] tracking-[0.08em] uppercase text-muted-foreground/50 mb-2">
-              {packets.length} {packets.length === 1 ? "packet" : "packets"}
+            <p className="font-mono text-[9px] tracking-[0.08em] uppercase text-text-tertiary mb-2">
+              {packets.length} {packets.length === 1 ? "release" : "releases"}
             </p>
             <div
               className="border border-border overflow-hidden"

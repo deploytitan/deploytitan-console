@@ -12,10 +12,10 @@ import { ProgressTrack, ProgressIndicator } from '@/components/ui/progress'
 interface ProgressBarProps {
   value: number // 0–100
   className?: string
-  color?: string // defaults to --color-gold (#c9a84c)
+  color?: string
 }
 
-export function ProgressBar({ value, className, color = '#c9a84c' }: ProgressBarProps) {
+export function ProgressBar({ value, className, color = 'var(--color-primary)' }: ProgressBarProps) {
   return (
     <ProgressTrack className={className}>
       <ProgressIndicator

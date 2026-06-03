@@ -16,6 +16,7 @@ import { usePendingMutations } from "@/store/pendingMutations";
 
 type StatusConfig = {
   dotColor: string;
+  labelColor: string;
   label: string;
   pulse?: boolean;
 };
@@ -23,19 +24,49 @@ type StatusConfig = {
 function getStatusConfig(stateName: string): StatusConfig {
   switch (stateName) {
     case "connected":
-      return { dotColor: "#22c55e", label: "Synced" };
+      return {
+        dotColor: "var(--color-signal-success)",
+        labelColor: "var(--sidebar-foreground)",
+        label: "Synced",
+      };
     case "connecting":
-      return { dotColor: "#f59e0b", label: "Syncing", pulse: true };
+      return {
+        dotColor: "var(--color-signal-warning)",
+        labelColor: "var(--color-signal-warning-text)",
+        label: "Syncing",
+        pulse: true,
+      };
     case "disconnected":
-      return { dotColor: "#ef4444", label: "Offline" };
+      return {
+        dotColor: "var(--color-signal-danger)",
+        labelColor: "var(--color-signal-danger-text)",
+        label: "Offline",
+      };
     case "error":
-      return { dotColor: "#ef4444", label: "Sync error" };
+      return {
+        dotColor: "var(--color-signal-danger)",
+        labelColor: "var(--color-signal-danger-text)",
+        label: "Sync error",
+      };
     case "needs-auth":
-      return { dotColor: "#f59e0b", label: "Session expired", pulse: true };
+      return {
+        dotColor: "var(--color-signal-warning)",
+        labelColor: "var(--color-signal-warning-text)",
+        label: "Session expired",
+        pulse: true,
+      };
     case "closed":
-      return { dotColor: "#ef4444", label: "Disconnected" };
+      return {
+        dotColor: "var(--color-signal-danger)",
+        labelColor: "var(--color-signal-danger-text)",
+        label: "Disconnected",
+      };
     default:
-      return { dotColor: "#9e9189", label: "Unknown" };
+      return {
+        dotColor: "var(--color-ink-quaternary)",
+        labelColor: "var(--color-ink-tertiary)",
+        label: "Unknown",
+      };
   }
 }
 
@@ -47,10 +78,20 @@ function getWriteStatusConfig({
   pendingCount: number;
 }): StatusConfig | null {
   if (failedCount > 0) {
-    return { dotColor: "#f59e0b", label: "Stale", pulse: true };
+    return {
+      dotColor: "var(--color-signal-warning)",
+      labelColor: "var(--color-signal-warning-text)",
+      label: "Stale",
+      pulse: true,
+    };
   }
   if (pendingCount > 0) {
-    return { dotColor: "#f59e0b", label: "Pending", pulse: true };
+    return {
+      dotColor: "var(--color-signal-warning)",
+      labelColor: "var(--color-signal-warning-text)",
+      label: "Pending",
+      pulse: true,
+    };
   }
   return null;
 }
@@ -68,7 +109,8 @@ export function ConnectionStatus() {
     state.name === "connected"
       ? getWriteStatusConfig({ failedCount, pendingCount })
       : null;
-  const { dotColor, label, pulse } = writeStatus ?? getStatusConfig(state.name);
+  const { dotColor, labelColor, label, pulse } =
+    writeStatus ?? getStatusConfig(state.name);
   const isHealthy = state.name === "connected" && writeStatus === null;
   const isBad =
     state.name === "disconnected" ||
@@ -97,7 +139,9 @@ export function ConnectionStatus() {
           height: "6px",
           borderRadius: "0.5px",
           backgroundColor: dotColor,
-          boxShadow: isBad ? `0 0 4px ${dotColor}60` : undefined,
+          boxShadow: isBad
+            ? `0 0 4px color-mix(in srgb, ${dotColor} 60%, transparent)`
+            : undefined,
         }}
         aria-hidden="true"
       />
@@ -110,7 +154,7 @@ export function ConnectionStatus() {
           color: isHealthy
             ? "var(--sidebar-foreground)"
             : isBad
-              ? dotColor
+              ? labelColor
               : "var(--sidebar-foreground)",
           opacity: isHealthy ? 1 : 0.9,
         }}

@@ -106,7 +106,7 @@ export function ThemeToggle({ className }: ThemeToggleProps) {
             className={cn(
               'flex items-center justify-center w-7 h-6 transition-all duration-200',
               active
-                ? 'bg-surface text-primary shadow-[0_1px_3px_rgba(0,0,0,0.08)] border border-primary/20'
+                ? 'bg-surface text-primary shadow-[0_1px_3px_color-mix(in_srgb,var(--color-ink)_8%,transparent)] border border-primary/20'
                 : 'text-ink-quaternary hover:text-ink-secondary',
             )}
             style={{ borderRadius: '1px' }}

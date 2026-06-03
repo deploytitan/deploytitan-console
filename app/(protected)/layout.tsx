@@ -1,6 +1,6 @@
 "use client";
 
-import { ReactNode, useCallback, useRef, useState } from "react";
+import { ReactNode, useCallback, useEffect, useRef, useState } from "react";
 import type { UpdateNeededReason } from "@rocicorp/zero";
 import {
   useAccessToken,
@@ -38,15 +38,15 @@ function ZeroWithAuth({ children }: { children: ReactNode }) {
     window.location.reload();
   }, []);
 
+  // Keyed only on userId — the Zero instance is created once per user session.
   const { data: zeroInstance, isLoading } = useQuery({
-    queryKey: ["zero-instance", userId, accessToken],
+    queryKey: ["zero-instance", userId],
     queryFn: ({ queryKey }) => {
       const _userId = queryKey[1];
-      const _accessToken = queryKey[2];
       zeroRef.current?.close();
       setSchemaMismatchMessage(undefined);
       const instance = createZero({
-        token: _accessToken,
+        token: accessToken,
         userId: _userId,
         onUpdateNeeded: handleUpdateNeeded,
       });
@@ -55,6 +55,13 @@ function ZeroWithAuth({ children }: { children: ReactNode }) {
     },
     enabled: !loading,
   });
+
+  // Push token refreshes to the existing Zero instance without recreating it.
+  // This prevents JWTExpired errors when WorkOS rotates the access token.
+  useEffect(() => {
+    if (!zeroInstance || !accessToken) return;
+    void zeroInstance.connection.connect({ auth: accessToken });
+  }, [zeroInstance, accessToken]);
 
   if (schemaMismatchMessage !== undefined) {
     return <ZeroSchemaMismatchScreen message={schemaMismatchMessage} />;

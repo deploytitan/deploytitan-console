@@ -1,7 +1,7 @@
 /**
  * useCreateProject — creates a project within an org via the Zero mutator.
  *
- * Returns an async `create` function and an `isPending` flag.
+ * Returns an async `create` function that resolves after the local Zero write.
  */
 
 import { useCallback } from "react";
@@ -44,7 +44,6 @@ export function useCreateProject() {
         );
         registerPendingMutation(write.server);
         await write.client;
-        await write.server;
         return { id, publicId, name: args.name };
       } catch (error) {
         throw error;

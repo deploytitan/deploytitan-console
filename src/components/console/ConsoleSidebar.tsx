@@ -19,7 +19,6 @@ import {
   type LucideIcon,
   PackageCheck,
   Settings,
-  Shield,
 } from "lucide-react";
 import { queries } from "@deploytitan/zero-schema";
 import { useQuery } from "@rocicorp/zero/react";
@@ -58,26 +57,10 @@ const generateProjectNav = (
       },
       {
         type: "item",
-        label: "Policies",
-        icon: Shield,
-        href: `/orgs/${orgId}/projects/${projectPublicId}/policies`,
-      },
-      {
-        type: "item",
         label: "Releases",
         icon: PackageCheck,
         href: `/orgs/${orgId}/projects/${projectPublicId}/releases`,
       },
-      // { label: "Rollouts", href: "rollouts", icon: Rocket },
-      // { label: "Ledger", href: "ledger", icon: ScrollText },
-      // { label: "Observatory", href: "observatory", icon: Activity },
-      // { label: "Pull Requests", href: "pull-requests", icon: GitPullRequest },
-      // { label: "Timeline", href: "timeline", icon: History },
-      // { label: "Rollback", href: "rollback", icon: RotateCcw },
-      // { label: "Foresight", href: "foresight", icon: Zap, badge: "BETA" },
-      // { label: "Integrate", href: "integrate", icon: Plug2 },
-      // { label: "Configure", href: "configure", icon: SlidersHorizontal },
-      // { label: "Settings", href: "settings", icon: Settings },
     ],
   },
 ];
@@ -92,12 +75,6 @@ const generateOrgNav = (orgId: string): NavItem[] => [
   },
   {
     type: "item",
-    label: "Project List",
-    href: `/orgs/${orgId}/projects`,
-    icon: LayoutGrid,
-  },
-  {
-    type: "item",
     href: `/orgs/${orgId}/settings`,
     icon: Settings,
     label: "Settings",
@@ -106,7 +83,7 @@ const generateOrgNav = (orgId: string): NavItem[] => [
 
 function SectionLabel({ children }: { children: React.ReactNode }) {
   return (
-    <span className="block px-3 mb-2 font-mono uppercase tracking-[0.08em] text-[9px] text-sidebar-foreground/40 select-none">
+    <span className="block px-3 mb-2 font-mono uppercase tracking-[0.08em] text-[9px] text-sidebar-foreground select-none">
       {children}
     </span>
   );
@@ -133,7 +110,7 @@ function NavLink({
         "rounded-[4px] leading-none",
         active
           ? "bg-sidebar-accent text-sidebar-foreground font-medium"
-          : "text-sidebar-foreground/65 hover:text-sidebar-foreground hover:bg-sidebar-accent/70",
+          : "text-sidebar-foreground hover:text-sidebar-foreground hover:bg-sidebar-accent/70",
       )}
     >
       {Icon ? (
@@ -148,7 +125,7 @@ function NavLink({
       <span className="truncate">{label}</span>
       {badge && (
         <span
-          className="ml-auto font-mono uppercase tracking-[0.06em] text-[8px] text-sidebar-foreground/40 bg-sidebar-accent/80 px-1 py-px"
+          className="ml-auto font-mono uppercase tracking-[0.06em] text-[8px] text-sidebar-foreground bg-sidebar-accent/80 px-1 py-px"
           style={{ borderRadius: "4px" }}
         >
           {badge}
@@ -173,7 +150,7 @@ function ProjectDisplay() {
         className="flex items-center gap-2 px-3 py-2 bg-sidebar-accent/50 border border-sidebar-border"
         style={{ borderRadius: "4px" }}
       >
-        <span className="font-mono text-[11px] tracking-wide text-sidebar-foreground/70 truncate">
+        <span className="font-mono text-[11px] tracking-wide text-sidebar-foreground truncate">
           {projectName}
         </span>
       </div>
@@ -264,11 +241,11 @@ export function ConsoleSidebar() {
       <nav className="flex-1 overflow-y-auto py-4 px-3 space-y-2">
         {projectPublicId && (
           <Link
-            href={`/orgs/${orgId}/projects`}
-            className="flex items-center gap-1.5 px-3 py-2 mb-4 text-[12px] text-sidebar-foreground/50 hover:text-sidebar-foreground transition-colors duration-100 rounded-lg hover:bg-sidebar-accent/70"
+            href={`/orgs/${orgId}`}
+            className="flex items-center gap-1.5 px-3 py-2 mb-4 text-[12px] text-sidebar-foreground hover:text-sidebar-foreground transition-colors duration-100 rounded-lg hover:bg-sidebar-accent/70"
           >
             <ChevronLeft className="size-3.5 shrink-0" strokeWidth={1.75} />
-            All Projects
+            Organization
           </Link>
         )}
         <NavGroupList navList={navList} />
@@ -301,12 +278,12 @@ export function ConsoleSidebar() {
                 <p className="text-[12px] font-medium text-sidebar-foreground truncate leading-tight">
                   {displayName}
                 </p>
-                <p className="font-mono text-[9px] tracking-wide text-sidebar-foreground/45 truncate leading-tight mt-0.5">
+                <p className="font-mono text-[9px] tracking-wide text-sidebar-foreground truncate leading-tight mt-0.5">
                   {user.email}
                 </p>
               </div>
               <ChevronUp
-                className="size-3 shrink-0 text-sidebar-foreground/30 transition-transform duration-150 group-data-[popup-open]:rotate-180"
+                className="size-3 shrink-0 text-sidebar-foreground transition-transform duration-150 group-data-[popup-open]:rotate-180"
                 strokeWidth={1.75}
               />
             </Menu.Trigger>
@@ -322,7 +299,7 @@ export function ConsoleSidebar() {
                   className={cn(
                     "w-[204px] overflow-hidden",
                     "bg-sidebar border border-sidebar-border",
-                    "shadow-[0_4px_16px_rgba(0,0,0,0.12),0_1px_4px_rgba(0,0,0,0.08)]",
+                    "shadow-[0_4px_16px_color-mix(in_srgb,var(--color-ink)_12%,transparent),0_1px_4px_color-mix(in_srgb,var(--color-ink)_8%,transparent)]",
                     "data-[starting-style]:opacity-0 data-[starting-style]:translate-y-1",
                     "data-[ending-style]:opacity-0 data-[ending-style]:translate-y-1",
                     "transition-[opacity,transform] duration-150 ease-out",
@@ -334,7 +311,7 @@ export function ConsoleSidebar() {
                     <p className="text-[12px] font-medium text-sidebar-foreground truncate leading-tight">
                       {displayName}
                     </p>
-                    <p className="font-mono text-[9px] tracking-wide text-sidebar-foreground/45 truncate leading-tight mt-0.5">
+                    <p className="font-mono text-[9px] tracking-wide text-sidebar-foreground truncate leading-tight mt-0.5">
                       {user.email}
                     </p>
                   </div>
@@ -344,7 +321,7 @@ export function ConsoleSidebar() {
                     <Menu.Item
                       className={cn(
                         "flex items-center gap-2 w-full px-3 py-2 text-[12px]",
-                        "text-sidebar-foreground/70 cursor-pointer select-none",
+                        "text-sidebar-foreground cursor-pointer select-none",
                         "transition-colors duration-100 outline-none",
                         "hover:bg-sidebar-accent/70 hover:text-sidebar-foreground",
                         "data-[highlighted]:bg-sidebar-accent/70 data-[highlighted]:text-sidebar-foreground",
