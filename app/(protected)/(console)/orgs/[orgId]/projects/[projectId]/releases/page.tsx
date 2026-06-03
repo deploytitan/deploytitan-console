@@ -5,7 +5,6 @@ import { useQuery, useZero } from "@rocicorp/zero/react";
 import { queries, mutators } from "@deploytitan/zero-schema";
 import {
   ArrowRight,
-  PackageCheck,
   Plus,
   Trash2,
   CheckCircle2,
@@ -95,14 +94,10 @@ function StatusBadge({ status }: { status: ReleasePacketStatus }) {
 
 function CreatePacketForm({
   projectId,
-  orgId,
-  projectPublicId,
   onCreated,
   onCancel,
 }: {
   projectId: string;
-  orgId: string;
-  projectPublicId: string;
   onCreated: (id: string) => void;
   onCancel: () => void;
 }) {
@@ -134,14 +129,14 @@ function CreatePacketForm({
       style={{ borderRadius: "4px" }}
     >
       <p className="font-mono text-[9px] tracking-[0.08em] uppercase text-text-tertiary">
-        New release packet
+        New release
       </p>
       <div className="space-y-2">
         <input
           autoFocus
           value={name}
           onChange={(e) => setName(e.target.value)}
-          placeholder="Packet name"
+          placeholder="Release name"
           className={cn(
             "w-full px-3 py-2 text-[13px] text-foreground bg-background",
             "border border-border focus:border-primary/40 outline-none",
@@ -153,7 +148,7 @@ function CreatePacketForm({
         <input
           value={description}
           onChange={(e) => setDescription(e.target.value)}
-          placeholder="Description (optional)"
+          placeholder="Release summary (optional)"
           className={cn(
             "w-full px-3 py-2 text-[13px] text-foreground bg-background",
             "border border-border focus:border-primary/40 outline-none",
@@ -170,7 +165,7 @@ function CreatePacketForm({
           ) : (
             <Plus className="size-3.5" />
           )}
-          Create packet
+          Create release
         </Button>
         <Button
           type="button"
@@ -330,7 +325,7 @@ export default function ReleasesPage() {
               Releases
             </h1>
             <p className="mt-1.5 font-mono text-[9px] tracking-[0.08em] uppercase text-text-tertiary">
-              Release packets for coordinated multi-PR merges
+              Business-first release packets with scoped engineering detail
             </p>
           </div>
           <Button
@@ -339,7 +334,7 @@ export default function ReleasesPage() {
             disabled={showCreate}
           >
             <Plus className="size-3.5" />
-            New Packet
+            New release
           </Button>
         </div>
       </div>
@@ -350,8 +345,6 @@ export default function ReleasesPage() {
         {showCreate && project && (
           <CreatePacketForm
             projectId={project.id}
-            orgId={orgId}
-            projectPublicId={projectPublicId}
             onCreated={handleCreated}
             onCancel={() => setShowCreate(false)}
           />
@@ -386,20 +379,20 @@ export default function ReleasesPage() {
               />
             </div>
             <p className="mb-1 text-[14px] font-medium text-foreground tracking-tight">
-              No release packets
+              No releases yet
             </p>
             <p className="mb-5 text-[12px] text-muted-foreground text-center max-w-[280px] leading-relaxed">
-              A release packet groups multiple PRs for coordinated, dependency-aware merging in one action.
+              Create a release packet, shape the customer-facing story, then open each release item to map the pull requests behind it.
             </p>
             <Button size="sm" onClick={() => setShowCreate(true)}>
               <Plus className="size-3.5" />
-              New Packet
+              New release
             </Button>
           </div>
         ) : packets.length > 0 ? (
           <div>
             <p className="font-mono text-[9px] tracking-[0.08em] uppercase text-text-tertiary mb-2">
-              {packets.length} {packets.length === 1 ? "packet" : "packets"}
+              {packets.length} {packets.length === 1 ? "release" : "releases"}
             </p>
             <div
               className="border border-border overflow-hidden"

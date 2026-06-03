@@ -17,10 +17,10 @@ export function ZeroSchemaMismatchScreen({ message }: { message?: string }) {
                   Client and server schemas are incompatible.
                 </h1>
                 <p className="max-w-prose text-sm leading-6 text-ink-tertiary">
-                  The console cannot safely load replicated data until the Zero cache
-                  has been reset or redeployed against the current database schema.
-                  Your session is intact, but the app is blocked to avoid rendering
-                  stale state.
+                  The console cannot safely load replicated data until the Zero
+                  cache has been reset or redeployed against the current
+                  database schema. Your session is intact, but the app is
+                  blocked to avoid rendering stale state.
                 </p>
               </div>
             </div>
@@ -44,7 +44,7 @@ export function ZeroSchemaMismatchScreen({ message }: { message?: string }) {
                   <dt className="uppercase tracking-[0.12em] text-ink-quaternary">
                     Detail
                   </dt>
-                  <dd className="whitespace-pre-wrap break-words text-ink-secondary">
+                  <dd className="whitespace-pre-wrap break-words text-ink-secondary truncate">
                     {message}
                   </dd>
                 </div>
@@ -54,7 +54,8 @@ export function ZeroSchemaMismatchScreen({ message }: { message?: string }) {
                   Action
                 </dt>
                 <dd className="text-ink-secondary">
-                  A new version of DeployTitan is being rolled out. This usually resolves within a few minutes — click Retry to check again.
+                  A new version of DeployTitan is being rolled out. This usually
+                  resolves within a few minutes — click Retry to check again.
                 </dd>
               </div>
             </dl>
