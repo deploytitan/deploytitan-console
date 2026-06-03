@@ -1,3 +1,9 @@
 ignoredBuiltDependencies:
+  - msw
+  - protobufjs
   - sharp
   - unrs-resolver
+
+onlyBuiltDependencies:
+  - '@rocicorp/zero-sqlite3'
+  - esbuild
