@@ -6,44 +6,51 @@ brand
 
 ## Users
 
-Two simultaneous audiences who both land on the same site:
+Two simultaneous audiences use the console and its surrounding product surfaces:
 
-**Self-serve engineers** (staff/principal engineers, platform engineers, SREs): They arrive mid-evaluation, often from a GitHub link or word-of-mouth. They want proof the tool is serious, fast access to docs or a CLI install command, and enough technical depth to trust it before they try it. They're skeptical of marketing language; credibility comes from specificity.
+**Self-serve engineers** (staff/principal engineers, platform engineers, SREs): They want to move fast without losing clarity. They expect the console to feel operational, trustworthy, and easy to scan. They care about whether the workflow reduces release-night busywork right away.
 
-**Leadership (engineering managers, VPs, CTOs)**: They arrive after an engineer has flagged the tool, or they're doing their own due diligence on deployment risk. They need a coherent capability story, reliability proof (social proof, metrics, clear product scope), and a clear path to a demo or a conversation. They're evaluating risk, not features.
+**Leadership (engineering managers, VPs, CTOs)**: They want a product that looks controlled, mature, and simple to adopt. They are judging whether DeployTitan reduces release drag and late-night coordination overhead without forcing a tooling migration.
 
-The site must speak fluently to both without alienating either. Engineers spot pandering; leaders spot amateur positioning.
+The experience must serve both at once: technically credible for engineers, calm and legible for leaders.
 
 ## Product Purpose
 
-DeployTitan is release coordination and deployment safety software for distributed engineering teams. The core product is Titan Rollouts: a release coordination layer that sits above GitHub, CI/CD, and observability tools to model the release lifecycle those systems do not manage well.
+DeployTitan is sprint release coordination software for teams shipping across multiple repositories and services. The core product is Titan Rollout: one place to create a release, track sprint PRs, trigger CI and Jenkins, route approvals through Slack, post release updates, and summarize impact from Grafana.
 
-The product solves multi-repo release coordination, deployment freeze chaos, release dependency management, release visibility, rollback coordination, and release approvals. It is not a traffic routing platform, service mesh replacement, CI/CD replacement, or multi-cloud DR layer.
+The product solves release coordination overhead: too many tabs, unclear ownership, slow approvals, and manual post-release checking. It is not a CI/CD replacement, observability replacement, traffic-routing layer, or service mesh.
 
-Product structure: Titan Rollouts is the single core product now. Titan Foresight (deployment-aware risk intelligence) is the next layer. Titan Phoenix (enterprise recovery) is a future roadmap item.
+For the current product and all supporting surfaces, Phase 1 is the truth:
+- Release creation
+- Approval messages in Slack
+- Release posting
+- Impact reports from Grafana
+- Integrations with GitHub, GitHub Actions, Jenkins, Grafana, and Slack
 
-Success means: engineering teams coordinate complex multi-service releases without manual Slack threads, spreadsheets, and release post-mortems. The primary goal of the landing site is demo booking conversion for teams with real release coordination overhead.
+Success means teams stop rebuilding release coordination by hand every sprint.
 
 ## Brand Personality
 
 **Precise. Confident. Calm.**
 
-The tone is that of the best engineer in the room: speaks with authority, doesn't over-explain, earns trust through specificity rather than enthusiasm. Never exclamatory. Never corporate-bland. The voice is direct, competent, and measured. It knows deployment safety is serious work and treats it that way.
+DeployTitan should still feel like the best engineer in the room, but not cold for the sake of it. The voice is direct, competent, and specific. It avoids hype, but it also avoids needless severity. We are building software for serious work, presented with clarity instead of intimidation.
 
 ## Anti-references
 
-- **Generic SaaS cream + purple**: Notion/Linear/Loom aesthetic. Soft pastels, friendly rounded corners, "everyone-welcome" copy. DeployTitan is not a productivity tool; it's infrastructure. The design should feel engineered, not approachable.
-- **Dark neon DevOps**: Terminal-green on black, aggressive gradients, the "we're hackers" aesthetic of 2018-era ops tooling. DeployTitan is enterprise-capable, not scrappy.
-- **Enterprise boring**: Navy blue dashboards, bullet-list feature pages, stock photo heroes, corporate sans-serif in grey. Authoritative does not mean boring.
+- **Generic SaaS cream + purple**: soft, vague, friendly-for-everyone software that hides what the product actually does.
+- **Dark neon DevOps**: glow-heavy terminal cosplay, aggressive gradients, “ops as cyberpunk theater.”
+- **Enterprise boring**: lifeless navy-and-grey dashboards, corporate filler copy, and layouts that say “procurement portal” instead of “release control.”
+- **Overcorrected rigidity**: interfaces that are so sharp and severe they stop feeling usable. DeployTitan should feel engineered first, but approachable where action matters.
 
 ## Design Principles
 
-1. **Specificity earns trust.** Concrete product names, real capability descriptions, and precise language outperform category-speak and superlatives. "Instant rollback in under 30 seconds" beats "ship with confidence."
-2. **The interface demonstrates the product.** Animations, live demos, and interactive elements should mirror what the product does: precision, control, observability. Don't just describe deployment safety; show it.
-3. **Dual-track legibility.** Every page should yield value to an engineer scanning for technical depth AND a leader scanning for capability scope and credibility. Neither should feel patronized.
-4. **Calm authority over excitement.** No hype, no urgency tactics. DeployTitan earns attention through competence. The tone is assured, not eager.
-5. **Ship or stay home.** Every design decision should serve the conversion funnel: demo booking. Secondary actions exist but never compete with the primary.
+1. **Specificity earns trust.** Show the real workflow: releases, PRs, approvals, Slack messages, and Grafana summaries.
+2. **Clarity in under two minutes.** A new visitor or user should understand what DeployTitan is, whether it fits them, and what to do next quickly.
+3. **Engineered, not hostile.** The product should feel precise and operational, but not punishing or emotionally cold.
+4. **Mixed geometry with intent.** Sharp corners belong to machine-facing surfaces and structural UI. Softer rounded corners belong to conversion surfaces, summary moments, and approachable groupings.
+5. **Full-width when it improves scanning.** Wide layouts are acceptable when they help present operational content cleanly. Do not force everything into a narrow marketing container.
+6. **The primary action stays obvious.** Account creation, release creation, and next-step actions should never get buried under decorative decisions.
 
 ## Accessibility & Inclusion
 
-WCAG 2.1 AAA where feasible. Reduced-motion support is essential: all animations must respect `prefers-reduced-motion`. Sufficient color contrast for both light and dark modes. Keyboard navigation must be fully functional.
+WCAG 2.1 AA minimum, AAA where feasible. Reduced-motion support is required. Light mode must preserve strong text contrast, especially for small labels and button text. Keyboard navigation and focus visibility must be fully supported.
