@@ -4,15 +4,13 @@ import { useParams } from "next/navigation";
 import { useQuery } from "@rocicorp/zero/react";
 import { queries } from "@deploytitan/zero-schema";
 import {
-  Shield,
+  AlertTriangle,
+  Clock,
+  ExternalLink,
   GitBranch,
   GitFork,
   GitPullRequest,
-  AlertTriangle,
-  ExternalLink,
-  Clock,
 } from "lucide-react";
-import Link from "next/link";
 
 // ── Helpers ────────────────────────────────────────────────────────────────────
 
@@ -41,7 +39,10 @@ function formatRelativeTime(ts: number | null): string {
 
 function RowSkeleton({ count = 3 }: { count?: number }) {
   return (
-    <div className="border border-border overflow-hidden" style={{ borderRadius: "4px" }}>
+    <div
+      className="border border-border overflow-hidden"
+      style={{ borderRadius: "4px" }}
+    >
       {Array.from({ length: count }).map((_, i) => (
         <div
           key={i}
@@ -104,24 +105,24 @@ type Repository = {
 
 const SIGNAL = {
   success: {
-    color: 'var(--color-signal-success)',
-    bg: 'color-mix(in srgb, var(--color-signal-success) 8%, transparent)',
-    border: 'color-mix(in srgb, var(--color-signal-success) 20%, transparent)',
+    color: "var(--color-signal-success)",
+    bg: "color-mix(in srgb, var(--color-signal-success) 8%, transparent)",
+    border: "color-mix(in srgb, var(--color-signal-success) 20%, transparent)",
   },
   warning: {
-    color: 'var(--color-signal-warning)',
-    bg: 'color-mix(in srgb, var(--color-signal-warning) 8%, transparent)',
-    border: 'color-mix(in srgb, var(--color-signal-warning) 20%, transparent)',
+    color: "var(--color-signal-warning)",
+    bg: "color-mix(in srgb, var(--color-signal-warning) 8%, transparent)",
+    border: "color-mix(in srgb, var(--color-signal-warning) 20%, transparent)",
   },
   danger: {
-    color: 'var(--color-signal-danger)',
-    bg: 'color-mix(in srgb, var(--color-signal-danger) 8%, transparent)',
-    border: 'color-mix(in srgb, var(--color-signal-danger) 20%, transparent)',
+    color: "var(--color-signal-danger)",
+    bg: "color-mix(in srgb, var(--color-signal-danger) 8%, transparent)",
+    border: "color-mix(in srgb, var(--color-signal-danger) 20%, transparent)",
   },
   deploy: {
-    color: 'var(--color-signal-deploy)',
-    bg: 'color-mix(in srgb, var(--color-signal-deploy) 8%, transparent)',
-    border: 'color-mix(in srgb, var(--color-signal-deploy) 20%, transparent)',
+    color: "var(--color-signal-deploy)",
+    bg: "color-mix(in srgb, var(--color-signal-deploy) 8%, transparent)",
+    border: "color-mix(in srgb, var(--color-signal-deploy) 20%, transparent)",
   },
 } as const;
 
@@ -138,7 +139,12 @@ function SignalBadge({
   return (
     <span
       className="inline-flex items-center font-mono text-[8px] tracking-[0.06em] uppercase px-1.5 py-px border"
-      style={{ borderRadius: "1px", color: s.color, backgroundColor: s.bg, borderColor: s.border }}
+      style={{
+        borderRadius: "1px",
+        color: s.color,
+        backgroundColor: s.bg,
+        borderColor: s.border,
+      }}
     >
       {Icon && <Icon className="size-2 mr-0.5" strokeWidth={2} />}
       {children}
@@ -260,7 +266,13 @@ function MergeStatusBadge({ status }: { status: string | null }) {
   return <SignalBadge variant={variant}>{status}</SignalBadge>;
 }
 
-function StateBadge({ state, draft }: { state: string | null; draft: boolean | null }) {
+function StateBadge({
+  state,
+  draft,
+}: {
+  state: string | null;
+  draft: boolean | null;
+}) {
   if (draft) {
     return (
       <span
@@ -306,7 +318,9 @@ function PrRow({ pr, repoName }: { pr: PullRequest; repoName: string }) {
           </span>
           {pr.authorLogin && (
             <>
-              <span className="text-border select-none" aria-hidden>·</span>
+              <span className="text-border select-none" aria-hidden>
+                ·
+              </span>
               <span className="font-mono text-[9px] text-text-tertiary">
                 {pr.authorLogin}
               </span>
@@ -451,35 +465,11 @@ export default function OverviewPage() {
           </div>
         )}
 
-        {/* Quick links */}
-        <div>
-          <SectionLabel>Sections</SectionLabel>
-          <div
-            className="border border-border overflow-hidden"
-            style={{ borderRadius: "4px" }}
-          >
-            <Link
-              href={`/orgs/${orgId}/projects/${projectPublicId}/policies`}
-              className="group flex items-center gap-3 px-5 py-3.5 bg-background border-b border-border last:border-b-0 hover:bg-muted/50 transition-colors duration-100"
-            >
-              <Shield
-                className="size-4 text-text-tertiary group-hover:text-muted-foreground transition-colors duration-100 shrink-0"
-                strokeWidth={1.5}
-              />
-              <div className="min-w-0 flex-1">
-                <p className="text-[13px] font-medium text-foreground leading-none">
-                  Policies
-                </p>
-                <p className="mt-0.5 text-[11px] text-text-tertiary leading-relaxed">
-                  Release gates, freeze windows, and approval rules for this project
-                </p>
-              </div>
-            </Link>
-          </div>
-        </div>
-
         {/* Repositories */}
-        <RepositoriesSection repos={repos as Repository[]} loading={reposLoading} />
+        <RepositoriesSection
+          repos={repos as Repository[]}
+          loading={reposLoading}
+        />
 
         {/* Pull Requests */}
         <PullRequestsSection
