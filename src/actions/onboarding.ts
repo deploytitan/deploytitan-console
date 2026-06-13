@@ -1,7 +1,7 @@
 "use server";
 
 import { getWorkOS, withAuth } from "@workos-inc/authkit-nextjs";
-import { convexCreateOrganization, convexSyncSession } from "@/lib/console/convexServer";
+import { convexSyncSession } from "@/lib/console/convexServer";
 
 export type CreateOrgResult =
   | { success: true; orgId: string }
@@ -49,11 +49,6 @@ export async function createOrganizationAction(
         workosOrgId: organization.id,
         name: organization.name,
       },
-    });
-
-    await convexCreateOrganization(accessToken, {
-      workosOrgId: organization.id,
-      name: organization.name,
     });
 
     return { success: true, orgId: organization.id };

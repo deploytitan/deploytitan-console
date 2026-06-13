@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useEffect, useState } from "react";
 import { useParams, usePathname } from "next/navigation";
 import { useAuth } from "@workos-inc/authkit-nextjs/components";
 import { useQuery } from "convex/react";
@@ -204,6 +205,8 @@ function NavGroupList({ navList }: { navList: NavItem[] }) {
 export function ConsoleSidebar() {
   const params = useParams();
   const { user } = useAuth();
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => { setMounted(true); }, []);
 
   const orgId = params?.orgId as string | undefined;
   const projectPublicId = params?.projectId as string | undefined;
@@ -258,7 +261,7 @@ export function ConsoleSidebar() {
           <ConnectionStatus />
           <ThemeToggle />
         </div>
-        {user && (
+        {mounted && user && (
           <Menu.Root>
             <Menu.Trigger
               className={cn(

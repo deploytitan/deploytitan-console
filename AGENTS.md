@@ -20,3 +20,17 @@ Either you can find this file in the deploytitan-monorepo repo or you can find i
 - Use signal text tokens for readable status copy: `text-signal-success-text`, `text-signal-warning-text`, `text-signal-danger-text`, and `text-signal-deploy-text`. Reserve `text-signal-success`, `text-signal-warning`, `text-signal-danger`, and `text-signal-deploy` for icons, fills, borders, and non-text marks.
 - Avoid opacity-suffixed text utilities such as `text-muted-foreground/40` or `text-foreground/60`. If the hierarchy is too strong, add or adjust a semantic token instead of weakening contrast per component.
 - Dark mode should come from token overrides on `.dark`; do not add arbitrary dark-mode text variable utilities or one-off dark hex classes when the base token already themes correctly.
+
+<!-- convex-ai-start -->
+
+This project uses [Convex](https://convex.dev) as its backend.
+
+When working on Convex code, **always read
+`convex/_generated/ai/guidelines.md` first** for important guidelines on
+how to correctly use Convex APIs and patterns. The file contains rules that
+override what you may have learned about Convex from training data.
+
+Convex agent skills for common tasks can be installed by running
+`npx convex ai-files install`.
+
+<!-- convex-ai-end -->

@@ -1,5 +1,6 @@
 import { withAuth, getWorkOS } from "@workos-inc/authkit-nextjs";
 import { convexSyncSession } from "@/lib/console/convexServer";
+import { ResultAsync } from "neverthrow";
 
 export async function syncAuthenticatedSessionToConvex(): Promise<{
   organizationId: string | null;
@@ -12,9 +13,27 @@ export async function syncAuthenticatedSessionToConvex(): Promise<{
     throw new Error("Missing WorkOS access token.");
   }
 
-  const organization = organizationId
-    ? await getWorkOS().organizations.getOrganization(organizationId)
-    : null;
+  if (!organizationId) {
+    throw new Error("Missing WorkOS organization ID.");
+  }
+
+  const orgFetchResult = await ResultAsync.fromPromise(
+    getWorkOS().organizations.getOrganization(organizationId),
+    (err) => {
+      console.error(
+        "[syncAuthenticatedSessionToConvex] getOrganization error",
+        err,
+      );
+      return err;
+    },
+  );
+  if (orgFetchResult.isErr()) {
+    throw new Error("Failed to fetch WorkOS organization.");
+  }
+  const organization = orgFetchResult.match(
+    (org) => org,
+    (err) => null,
+  );
 
   await convexSyncSession(accessToken, {
     user: {

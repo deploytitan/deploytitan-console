@@ -38,15 +38,3 @@ export async function convexSyncSession(
   return createAuthedClient(accessToken).mutation(api.console.syncSession, args);
 }
 
-export async function convexCreateOrganization(
-  accessToken: string,
-  args: {
-    workosOrgId: string;
-    name: string;
-  },
-) {
-  return createAuthedClient(accessToken).mutation(
-    api.console.createOrganization,
-    args,
-  );
-}
