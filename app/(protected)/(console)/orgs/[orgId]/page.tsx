@@ -3,11 +3,11 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery } from "convex/react";
 import { ArrowRight, FolderGit2, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { CreateProjectDialog } from "@/components/console/CreateProjectDialog";
-import { getOrgDashboard } from "@/lib/console/http";
+import { api } from "@convex/_generated/api";
 import { cn } from "@/lib/utils";
 
 function formatDate(ts: number): string {
@@ -54,11 +54,8 @@ export default function OrgOverviewPage() {
   const orgId = params.orgId as string;
   const [dialogOpen, setDialogOpen] = useState(false);
 
-  const { data, isLoading } = useQuery({
-    queryKey: ["org-dashboard", orgId],
-    queryFn: () => getOrgDashboard(orgId),
-    staleTime: 30_000,
-  });
+  const data = useQuery(api.console.getOrgDashboard, { workosOrgId: orgId });
+  const isLoading = data === undefined;
 
   const org = data?.org ?? null;
   const projects = data?.projects ?? [];

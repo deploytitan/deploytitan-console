@@ -10,11 +10,11 @@ import {
 import { ThemeProvider } from "@/contexts/ThemeContext";
 import { initGrafanaFaro } from "@/lib/grafanaFaro";
 import { installFrontendTelemetry } from "@/lib/frontendTelemetry";
+import { ConvexClientProvider } from "@/app/ConvexClientProvider";
 import {
   AuthKitProvider,
   useAuth,
 } from "@workos-inc/authkit-nextjs/components";
-import { ConnectionStatus } from "@/components/console/ConnectionStatus";
 import { Toaster } from "@/components/ui/Toaster";
 
 export const queryClient = new QueryClient({
@@ -53,10 +53,12 @@ export function AppProviders({ children }: { children: ReactNode }) {
     <AuthKitProvider>
       <Suspense fallback={null}>
         <QueryClientProvider client={queryClient}>
-          <ThemeProvider>
-            <FrontendTelemetryBootstrap />
-            {children}
-          </ThemeProvider>
+          <ConvexClientProvider>
+            <ThemeProvider>
+              <FrontendTelemetryBootstrap />
+              {children}
+            </ThemeProvider>
+          </ConvexClientProvider>
           <Toaster />
         </QueryClientProvider>
       </Suspense>

@@ -2,28 +2,14 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { useParams } from "next/navigation";
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery } from "convex/react";
 import {
   Link2,
   Plus,
   Trash2,
 } from "lucide-react";
-import { queryClient } from "@/app/router-shell";
 import { Button } from "@/components/ui/button";
-import {
-  addReleaseDependency,
-  addReleaseItem,
-  addReleaseParticipant,
-  attachPullRequestToRelease,
-  deleteReleaseDependency,
-  deleteReleaseItem,
-  deleteReleaseParticipant,
-  detachPullRequestFromRelease,
-  getReleaseDetail,
-  updateRelease,
-  updateReleaseItem,
-  updateReleaseParticipant,
-} from "@/lib/console/http";
+import { api } from "@convex/_generated/api";
 
 function Field({
   label,
@@ -57,13 +43,22 @@ export default function ReleaseDetailPage() {
   const projectId = params.projectId as string;
   const releaseId = params.releaseId as string;
 
-  const { data, isLoading } = useQuery({
-    queryKey: ["release-detail", projectId, releaseId],
-    queryFn: () => getReleaseDetail(projectId, releaseId),
+  const data = useQuery(api.console.getReleaseDetail, {
+    projectPublicId: projectId,
+    releasePublicId: releaseId,
   });
-
-  const invalidate = () =>
-    queryClient.invalidateQueries({ queryKey: ["release-detail", projectId, releaseId] });
+  const isLoading = data === undefined;
+  const updateRelease = useMutation(api.console.updateRelease);
+  const addReleaseItem = useMutation(api.console.addReleaseItem);
+  const updateReleaseItem = useMutation(api.console.updateReleaseItem);
+  const removeReleaseItem = useMutation(api.console.removeReleaseItem);
+  const addReleaseParticipant = useMutation(api.console.addReleaseParticipant);
+  const updateReleaseParticipant = useMutation(api.console.updateReleaseParticipant);
+  const removeReleaseParticipant = useMutation(api.console.removeReleaseParticipant);
+  const attachPullRequestToRelease = useMutation(api.console.attachPullRequestToRelease);
+  const detachPullRequestFromRelease = useMutation(api.console.detachPullRequestFromRelease);
+  const addReleaseDependency = useMutation(api.console.addReleaseDependency);
+  const removeReleaseDependency = useMutation(api.console.removeReleaseDependency);
 
   const release = data?.release;
   const pullRequests = data?.pullRequests ?? [];
@@ -94,39 +89,6 @@ export default function ReleaseDetailPage() {
   const [blockingPrId, setBlockingPrId] = useState("");
   const [blockedPrId, setBlockedPrId] = useState("");
 
-  const saveMutation = useMutation({
-    mutationFn: () =>
-      updateRelease(releaseId, {
-        name,
-        description,
-        outcome,
-        successMetric,
-        shipPlan,
-      }),
-    onSuccess: () => void invalidate(),
-  });
-
-  const addItemMutation = useMutation({
-    mutationFn: () => addReleaseItem(releaseId, { title: itemTitle }),
-    onSuccess: () => {
-      setItemTitle("");
-      void invalidate();
-    },
-  });
-
-  const addParticipantMutation = useMutation({
-    mutationFn: () =>
-      addReleaseParticipant(releaseId, {
-        name: participantName,
-        role: participantRole,
-      }),
-    onSuccess: () => {
-      setParticipantName("");
-      setParticipantRole("");
-      void invalidate();
-    },
-  });
-
   useEffect(() => {
     if (!release) return;
     setName(release.name);
@@ -155,7 +117,19 @@ export default function ReleaseDetailPage() {
             {release.name}
           </h1>
         </div>
-        <Button size="sm" onClick={() => saveMutation.mutate()} disabled={saveMutation.isPending}>
+        <Button
+          size="sm"
+          onClick={() =>
+            updateRelease({
+              releasePublicId: releaseId,
+              name,
+              description,
+              outcome,
+              successMetric,
+              shipPlan,
+            })
+          }
+        >
           Save Changes
         </Button>
       </div>
@@ -171,7 +145,15 @@ export default function ReleaseDetailPage() {
               <select
                 value={release.status}
                 onChange={(e) =>
-                  updateRelease(releaseId, { status: e.target.value }).then(() => invalidate())
+                  updateRelease({
+                    releasePublicId: releaseId,
+                    status: e.target.value as
+                      | "draft"
+                      | "ready"
+                      | "in_progress"
+                      | "shipped"
+                      | "blocked",
+                  })
                 }
                 className="w-full border border-border bg-background px-3 py-2 text-[13px] text-foreground outline-none"
                 style={{ borderRadius: "4px" }}
@@ -201,7 +183,17 @@ export default function ReleaseDetailPage() {
                 className="w-full border border-border bg-background px-3 py-2 text-[13px] text-foreground outline-none"
                 style={{ borderRadius: "4px" }}
               />
-              <Button size="sm" disabled={!itemTitle.trim()} onClick={() => addItemMutation.mutate()}>
+              <Button
+                size="sm"
+                disabled={!itemTitle.trim()}
+                onClick={async () => {
+                  await addReleaseItem({
+                    releasePublicId: releaseId,
+                    title: itemTitle,
+                  });
+                  setItemTitle("");
+                }}
+              >
                 <Plus className="size-3.5" />
               </Button>
             </div>
@@ -215,20 +207,22 @@ export default function ReleaseDetailPage() {
                   <input
                     value={item.title}
                     onChange={(e) =>
-                      updateReleaseItem(item.id, {
-                        releaseId,
+                      updateReleaseItem({
+                        releasePublicId: releaseId,
+                        itemId: item.id,
                         title: e.target.value,
-                      }).then(() => invalidate())
+                      })
                     }
                     className="min-w-0 flex-1 bg-transparent text-[13px] text-foreground outline-none"
                   />
                   <select
                     value={item.status}
                     onChange={(e) =>
-                      updateReleaseItem(item.id, {
-                        releaseId,
-                        status: e.target.value,
-                      }).then(() => invalidate())
+                      updateReleaseItem({
+                        releasePublicId: releaseId,
+                        itemId: item.id,
+                        status: e.target.value as "todo" | "doing" | "done",
+                      })
                     }
                     className="border border-border bg-background px-2 py-1 text-[12px] text-foreground"
                     style={{ borderRadius: "4px" }}
@@ -239,7 +233,12 @@ export default function ReleaseDetailPage() {
                   </select>
                   <button
                     className="text-text-tertiary hover:text-signal-danger-text"
-                    onClick={() => deleteReleaseItem(item.id, releaseId).then(() => invalidate())}
+                    onClick={() =>
+                      removeReleaseItem({
+                        releasePublicId: releaseId,
+                        itemId: item.id,
+                      })
+                    }
                   >
                     <Trash2 className="size-3.5" />
                   </button>
@@ -271,12 +270,13 @@ export default function ReleaseDetailPage() {
               <Button
                 size="sm"
                 disabled={!selectedPullRequest}
-                onClick={() =>
-                  attachPullRequestToRelease(releaseId, selectedPullRequest).then(() => {
-                    setSelectedPullRequest("");
-                    return invalidate();
-                  })
-                }
+                onClick={async () => {
+                  await attachPullRequestToRelease({
+                    releasePublicId: releaseId,
+                    pullRequestPublicId: selectedPullRequest,
+                  });
+                  setSelectedPullRequest("");
+                }}
               >
                 <Link2 className="size-3.5" />
               </Button>
@@ -295,9 +295,10 @@ export default function ReleaseDetailPage() {
                   <button
                     className="text-text-tertiary hover:text-signal-danger-text"
                     onClick={() =>
-                      detachPullRequestFromRelease(releaseId, pr.publicId).then(() =>
-                        invalidate(),
-                      )
+                      detachPullRequestFromRelease({
+                        releasePublicId: releaseId,
+                        pullRequestPublicId: pr.publicId,
+                      })
                     }
                   >
                     <Trash2 className="size-3.5" />
@@ -329,7 +330,15 @@ export default function ReleaseDetailPage() {
               <Button
                 size="sm"
                 disabled={!participantName.trim() || !participantRole.trim()}
-                onClick={() => addParticipantMutation.mutate()}
+                onClick={async () => {
+                  await addReleaseParticipant({
+                    releasePublicId: releaseId,
+                    name: participantName,
+                    role: participantRole,
+                  });
+                  setParticipantName("");
+                  setParticipantRole("");
+                }}
               >
                 <Plus className="size-3.5" />
                 Add Participant
@@ -350,10 +359,14 @@ export default function ReleaseDetailPage() {
                     <select
                       value={participant.status}
                       onChange={(e) =>
-                        updateReleaseParticipant(participant.id, {
-                          releaseId,
-                          status: e.target.value,
-                        }).then(() => invalidate())
+                        updateReleaseParticipant({
+                          releasePublicId: releaseId,
+                          participantId: participant.id,
+                          status: e.target.value as
+                            | "pending"
+                            | "confirmed"
+                            | "complete",
+                        })
                       }
                       className="border border-border bg-background px-2 py-1 text-[12px] text-foreground"
                       style={{ borderRadius: "4px" }}
@@ -365,9 +378,10 @@ export default function ReleaseDetailPage() {
                     <button
                       className="text-text-tertiary hover:text-signal-danger-text"
                       onClick={() =>
-                        deleteReleaseParticipant(participant.id, releaseId).then(() =>
-                          invalidate(),
-                        )
+                        removeReleaseParticipant({
+                          releasePublicId: releaseId,
+                          participantId: participant.id,
+                        })
                       }
                     >
                       <Trash2 className="size-3.5" />
@@ -412,16 +426,15 @@ export default function ReleaseDetailPage() {
               <Button
                 size="sm"
                 disabled={!blockingPrId || !blockedPrId || blockingPrId === blockedPrId}
-                onClick={() =>
-                  addReleaseDependency(releaseId, {
+                onClick={async () => {
+                  await addReleaseDependency({
+                    releasePublicId: releaseId,
                     blockingPullRequestPublicId: blockingPrId,
                     blockedPullRequestPublicId: blockedPrId,
-                  }).then(() => {
-                    setBlockingPrId("");
-                    setBlockedPrId("");
-                    return invalidate();
-                  })
-                }
+                  });
+                  setBlockingPrId("");
+                  setBlockedPrId("");
+                }}
               >
                 <Plus className="size-3.5" />
                 Add Dependency
@@ -441,9 +454,10 @@ export default function ReleaseDetailPage() {
                   <button
                     className="text-text-tertiary hover:text-signal-danger-text"
                     onClick={() =>
-                      deleteReleaseDependency(dependency.id, releaseId).then(() =>
-                        invalidate(),
-                      )
+                      removeReleaseDependency({
+                        releasePublicId: releaseId,
+                        dependencyId: dependency.id,
+                      })
                     }
                   >
                     <Trash2 className="size-3.5" />

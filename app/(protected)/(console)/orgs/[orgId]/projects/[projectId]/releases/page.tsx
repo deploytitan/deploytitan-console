@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery } from "convex/react";
 import {
   AlertTriangle,
   ArrowRight,
@@ -14,13 +14,8 @@ import {
   Plus,
   Trash2,
 } from "lucide-react";
-import { queryClient } from "@/app/router-shell";
 import { Button } from "@/components/ui/button";
-import {
-  createRelease,
-  deleteRelease,
-  getProjectReleases,
-} from "@/lib/console/http";
+import { api } from "@convex/_generated/api";
 import { cn } from "@/lib/utils";
 
 type ReleaseStatus = "draft" | "ready" | "in_progress" | "shipped" | "blocked";
@@ -79,27 +74,12 @@ export default function ReleasesPage() {
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
 
-  const { data, isLoading } = useQuery({
-    queryKey: ["project-releases", projectId],
-    queryFn: () => getProjectReleases(projectId),
+  const data = useQuery(api.console.getProjectReleases, {
+    projectPublicId: projectId,
   });
-
-  const refresh = () =>
-    queryClient.invalidateQueries({ queryKey: ["project-releases", projectId] });
-
-  const createMutation = useMutation({
-    mutationFn: () => createRelease({ projectId, name, description }),
-    onSuccess: () => {
-      setName("");
-      setDescription("");
-      void refresh();
-    },
-  });
-
-  const deleteMutation = useMutation({
-    mutationFn: (releaseId: string) => deleteRelease(releaseId),
-    onSuccess: () => void refresh(),
-  });
+  const isLoading = data === undefined;
+  const createRelease = useMutation(api.console.createRelease);
+  const deleteRelease = useMutation(api.console.deleteRelease);
 
   const project = data?.project;
   const releases = data?.releases ?? [];
@@ -135,8 +115,16 @@ export default function ReleasesPage() {
         <Button
           className="mt-3"
           size="sm"
-          disabled={!name.trim() || createMutation.isPending}
-          onClick={() => createMutation.mutate()}
+          disabled={!name.trim()}
+          onClick={async () => {
+            await createRelease({
+              projectPublicId: projectId,
+              name,
+              description,
+            });
+            setName("");
+            setDescription("");
+          }}
         >
           <Plus className="size-3.5" />
           Create Release
@@ -175,7 +163,9 @@ export default function ReleasesPage() {
               <StatusBadge status={release.status} />
               <button
                 className="text-text-tertiary hover:text-signal-danger-text"
-                onClick={() => deleteMutation.mutate(release.publicId)}
+                onClick={() =>
+                  deleteRelease({ releasePublicId: release.publicId })
+                }
               >
                 <Trash2 className="size-3.5" />
               </button>

@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery } from "convex/react";
 import {
   ExternalLink,
   FolderGit2,
@@ -11,13 +11,8 @@ import {
   GitPullRequest,
   Plus,
 } from "lucide-react";
-import { queryClient } from "@/app/router-shell";
 import { Button } from "@/components/ui/button";
-import {
-  createPullRequest,
-  createRepository,
-  getProjectOverview,
-} from "@/lib/console/http";
+import { api } from "@convex/_generated/api";
 
 function SectionLabel({
   children,
@@ -55,10 +50,10 @@ export default function ProjectOverviewPage() {
   const orgId = params.orgId as string;
   const projectId = params.projectId as string;
 
-  const { data, isLoading } = useQuery({
-    queryKey: ["project-overview", projectId],
-    queryFn: () => getProjectOverview(projectId),
+  const data = useQuery(api.console.getProjectOverview, {
+    projectPublicId: projectId,
   });
+  const isLoading = data === undefined;
 
   const [repoOwner, setRepoOwner] = useState("");
   const [repoName, setRepoName] = useState("");
@@ -68,42 +63,8 @@ export default function ProjectOverviewPage() {
   const [prUrl, setPrUrl] = useState("");
   const [prNumber, setPrNumber] = useState("");
 
-  const refresh = () =>
-    queryClient.invalidateQueries({ queryKey: ["project-overview", projectId] });
-
-  const createRepoMutation = useMutation({
-    mutationFn: () =>
-      createRepository({
-        projectId,
-        repoOwner,
-        repoName,
-        defaultBranch,
-      }),
-    onSuccess: () => {
-      setRepoOwner("");
-      setRepoName("");
-      setDefaultBranch("main");
-      void refresh();
-    },
-  });
-
-  const createPrMutation = useMutation({
-    mutationFn: () =>
-      createPullRequest({
-        projectId,
-        repositoryPublicId: prRepoId || undefined,
-        number: prNumber ? Number(prNumber) : undefined,
-        title: prTitle,
-        url: prUrl || undefined,
-      }),
-    onSuccess: () => {
-      setPrTitle("");
-      setPrRepoId("");
-      setPrUrl("");
-      setPrNumber("");
-      void refresh();
-    },
-  });
+  const createRepository = useMutation(api.console.createRepository);
+  const createPullRequest = useMutation(api.console.createPullRequest);
 
   const project = data?.project;
   const repositories = data?.repositories ?? [];
@@ -148,8 +109,18 @@ export default function ProjectOverviewPage() {
             <Button
               className="mt-3"
               size="sm"
-              disabled={!repoOwner.trim() || !repoName.trim() || createRepoMutation.isPending}
-              onClick={() => createRepoMutation.mutate()}
+              disabled={!repoOwner.trim() || !repoName.trim()}
+              onClick={async () => {
+                await createRepository({
+                  projectPublicId: projectId,
+                  repoOwner,
+                  repoName,
+                  defaultBranch,
+                });
+                setRepoOwner("");
+                setRepoName("");
+                setDefaultBranch("main");
+              }}
             >
               <Plus className="size-3.5" />
               Add Repository
@@ -221,8 +192,20 @@ export default function ProjectOverviewPage() {
             <Button
               className="mt-3"
               size="sm"
-              disabled={!prTitle.trim() || createPrMutation.isPending}
-              onClick={() => createPrMutation.mutate()}
+              disabled={!prTitle.trim()}
+              onClick={async () => {
+                await createPullRequest({
+                  projectPublicId: projectId,
+                  repositoryPublicId: prRepoId || undefined,
+                  number: prNumber ? Number(prNumber) : undefined,
+                  title: prTitle,
+                  url: prUrl || undefined,
+                });
+                setPrTitle("");
+                setPrRepoId("");
+                setPrUrl("");
+                setPrNumber("");
+              }}
             >
               <Plus className="size-3.5" />
               Add Pull Request

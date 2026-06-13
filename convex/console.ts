@@ -1,8 +1,9 @@
-import {
-  internalMutationGeneric as mutation,
-  internalQueryGeneric as query,
-} from "convex/server";
 import { v } from "convex/values";
+import type { Doc, Id } from "./_generated/dataModel";
+import type { MutationCtx, QueryCtx } from "./_generated/server";
+import { mutation, query } from "./_generated/server";
+
+type ConvexCtx = QueryCtx | MutationCtx;
 
 function now() {
   return Date.now();
@@ -21,73 +22,151 @@ function slugify(input: string) {
     .slice(0, 48);
 }
 
-async function getUserByWorkosUserId(ctx: any, workosUserId: string) {
+async function getUserByTokenIdentifier(
+  ctx: ConvexCtx,
+  tokenIdentifier: string,
+) {
   return await ctx.db
     .query("users")
-    .withIndex("by_workos_user_id", (q: any) => q.eq("workosUserId", workosUserId))
+    .withIndex("by_token_identifier", (q) =>
+      q.eq("tokenIdentifier", tokenIdentifier),
+    )
     .unique();
 }
 
-async function getOrganizationByWorkosOrgId(ctx: any, workosOrgId: string) {
+async function getUserByWorkosUserId(
+  ctx: ConvexCtx,
+  workosUserId: string,
+) {
+  return await ctx.db
+    .query("users")
+    .withIndex("by_workos_user_id", (q) => q.eq("workosUserId", workosUserId))
+    .unique();
+}
+
+async function getOrganizationByWorkosOrgId(ctx: ConvexCtx, workosOrgId: string) {
   return await ctx.db
     .query("organizations")
-    .withIndex("by_workos_org_id", (q: any) => q.eq("workosOrgId", workosOrgId))
+    .withIndex("by_workos_org_id", (q) => q.eq("workosOrgId", workosOrgId))
     .unique();
 }
 
-async function getProjectByPublicId(ctx: any, publicId: string) {
+async function getProjectByPublicId(ctx: ConvexCtx, publicId: string) {
   return await ctx.db
     .query("projects")
-    .withIndex("by_public_id", (q: any) => q.eq("publicId", publicId))
+    .withIndex("by_public_id", (q) => q.eq("publicId", publicId))
     .unique();
 }
 
-async function getRepositoryByPublicId(ctx: any, publicId: string) {
+async function getRepositoryByPublicId(ctx: ConvexCtx, publicId: string) {
   return await ctx.db
     .query("repositories")
-    .withIndex("by_public_id", (q: any) => q.eq("publicId", publicId))
+    .withIndex("by_public_id", (q) => q.eq("publicId", publicId))
     .unique();
 }
 
-async function getPullRequestByPublicId(ctx: any, publicId: string) {
+async function getPullRequestByPublicId(ctx: ConvexCtx, publicId: string) {
   return await ctx.db
     .query("pullRequests")
-    .withIndex("by_public_id", (q: any) => q.eq("publicId", publicId))
+    .withIndex("by_public_id", (q) => q.eq("publicId", publicId))
     .unique();
 }
 
-async function getReleaseByPublicId(ctx: any, publicId: string) {
+async function getReleaseByPublicId(ctx: ConvexCtx, publicId: string) {
   return await ctx.db
     .query("releasePackets")
-    .withIndex("by_public_id", (q: any) => q.eq("publicId", publicId))
+    .withIndex("by_public_id", (q) => q.eq("publicId", publicId))
     .unique();
 }
 
-function mapUser(user: any) {
+async function getReleaseById(
+  ctx: ConvexCtx,
+  releaseId: Id<"releasePackets">,
+): Promise<Doc<"releasePackets"> | null> {
+  return await ctx.db.get(releaseId);
+}
+
+async function requireViewer(ctx: ConvexCtx) {
+  const identity = await ctx.auth.getUserIdentity();
+  if (!identity) {
+    throw new Error("Unauthorized.");
+  }
+
+  const viewer = await getUserByTokenIdentifier(ctx, identity.tokenIdentifier);
+  if (!viewer) {
+    throw new Error("Viewer is not provisioned.");
+  }
+
+  return { identity, viewer };
+}
+
+async function requireMembership(ctx: ConvexCtx, organizationId: Id<"organizations">) {
+  const { viewer } = await requireViewer(ctx);
+  const membership = await ctx.db
+    .query("memberships")
+    .withIndex("by_organization_id_and_user_id", (q) =>
+      q.eq("organizationId", organizationId).eq("userId", viewer._id),
+    )
+    .unique();
+
+  if (!membership) {
+    throw new Error("Forbidden.");
+  }
+
+  return { viewer, membership };
+}
+
+async function requireProjectAccess(ctx: ConvexCtx, projectPublicId: string) {
+  const project = await getProjectByPublicId(ctx, projectPublicId);
+  if (!project) {
+    throw new Error("Project not found.");
+  }
+
+  await requireMembership(ctx, project.orgId);
+  return project;
+}
+
+async function requireReleaseAccess(ctx: ConvexCtx, releasePublicId: string) {
+  const release = await getReleaseByPublicId(ctx, releasePublicId);
+  if (!release) {
+    throw new Error("Release not found.");
+  }
+
+  const project = await ctx.db.get(release.projectId);
+  if (!project) {
+    throw new Error("Project not found.");
+  }
+
+  await requireMembership(ctx, project.orgId);
+  return { release, project };
+}
+
+function mapUser(user: Doc<"users">) {
   return {
-    workosUserId: user.workosUserId,
-    email: user.email,
+    id: user._id,
+    tokenIdentifier: user.tokenIdentifier,
+    workosUserId: user.workosUserId ?? null,
+    email: user.email ?? null,
     firstName: user.firstName ?? null,
     lastName: user.lastName ?? null,
   };
 }
 
-function mapOrg(org: any) {
+function mapOrganization(organization: Doc<"organizations">) {
   return {
-    id: org._id,
-    workosOrgId: org.workosOrgId,
-    name: org.name,
-    allocatedPlanId: org.allocatedPlanId ?? null,
-    createdAt: org.createdAt,
-    updatedAt: org.updatedAt,
+    id: organization._id,
+    workosOrgId: organization.workosOrgId,
+    name: organization.name,
+    allocatedPlanId: organization.allocatedPlanId ?? null,
+    createdAt: organization.createdAt,
+    updatedAt: organization.updatedAt,
   };
 }
 
-function mapProject(project: any) {
+function mapProject(project: Doc<"projects">) {
   return {
     id: project._id,
     publicId: project.publicId,
-    orgId: project.orgId,
     name: project.name,
     slug: project.slug,
     createdAt: project.createdAt,
@@ -95,57 +174,53 @@ function mapProject(project: any) {
   };
 }
 
-function mapRepo(repo: any) {
+function mapRepository(repository: Doc<"repositories">) {
   return {
-    id: repo._id,
-    publicId: repo.publicId,
-    projectId: repo.projectId,
-    repoVendor: repo.repoVendor,
-    repoOwner: repo.repoOwner,
-    repoName: repo.repoName,
-    defaultBranch: repo.defaultBranch ?? null,
-    installationStatus: repo.installationStatus ?? null,
-    createdAt: repo.createdAt,
-    updatedAt: repo.updatedAt,
+    id: repository._id,
+    publicId: repository.publicId,
+    repoVendor: repository.repoVendor,
+    repoOwner: repository.repoOwner,
+    repoName: repository.repoName,
+    defaultBranch: repository.defaultBranch ?? null,
+    installationStatus: repository.installationStatus ?? null,
+    createdAt: repository.createdAt,
+    updatedAt: repository.updatedAt,
   };
 }
 
-function mapPullRequest(pr: any) {
+function mapPullRequest(
+  pullRequest: Doc<"pullRequests">,
+  repositoryPublicId: string | null,
+) {
   return {
-    id: pr._id,
-    publicId: pr.publicId,
-    projectId: pr.projectId,
-    repositoryPublicId: pr.repositoryPublicId ?? null,
-    number: pr.number ?? null,
-    title: pr.title,
-    status: pr.status,
-    url: pr.url ?? null,
-    authorName: pr.authorName ?? null,
-    baseBranch: pr.baseBranch ?? null,
-    headBranch: pr.headBranch ?? null,
-    createdAt: pr.createdAt,
-    updatedAt: pr.updatedAt,
-    mergedAt: pr.mergedAt ?? null,
+    id: pullRequest._id,
+    publicId: pullRequest.publicId,
+    repositoryPublicId,
+    number: pullRequest.number ?? null,
+    title: pullRequest.title,
+    status: pullRequest.status,
+    url: pullRequest.url ?? null,
+    authorName: pullRequest.authorName ?? null,
+    baseBranch: pullRequest.baseBranch ?? null,
+    headBranch: pullRequest.headBranch ?? null,
+    createdAt: pullRequest.createdAt,
+    updatedAt: pullRequest.updatedAt,
+    mergedAt: pullRequest.mergedAt ?? null,
   };
 }
 
-function mapRelease(release: any) {
+function mapReleasePacket(releasePacket: Doc<"releasePackets">) {
   return {
-    id: release._id,
-    publicId: release.publicId,
-    projectId: release.projectId,
-    name: release.name,
-    description: release.description,
-    status: release.status,
-    outcome: release.outcome,
-    successMetric: release.successMetric,
-    shipPlan: release.shipPlan,
-    pullRequestPublicIds: release.pullRequestPublicIds,
-    items: release.items,
-    participants: release.participants,
-    dependencies: release.dependencies,
-    createdAt: release.createdAt,
-    updatedAt: release.updatedAt,
+    id: releasePacket._id,
+    publicId: releasePacket.publicId,
+    name: releasePacket.name,
+    description: releasePacket.description,
+    status: releasePacket.status,
+    outcome: releasePacket.outcome,
+    successMetric: releasePacket.successMetric,
+    shipPlan: releasePacket.shipPlan,
+    createdAt: releasePacket.createdAt,
+    updatedAt: releasePacket.updatedAt,
   };
 }
 
@@ -154,8 +229,8 @@ export const syncSession = mutation({
     user: v.object({
       workosUserId: v.string(),
       email: v.string(),
-      firstName: v.optional(v.string()),
-      lastName: v.optional(v.string()),
+      firstName: v.optional(v.union(v.string(), v.null())),
+      lastName: v.optional(v.union(v.string(), v.null())),
     }),
     organization: v.union(
       v.null(),
@@ -166,27 +241,39 @@ export const syncSession = mutation({
     ),
   },
   handler: async (ctx, args) => {
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) {
+      throw new Error("Unauthorized.");
+    }
+
     const timestamp = now();
-    let user = await getUserByWorkosUserId(ctx, args.user.workosUserId);
+    let user = await getUserByTokenIdentifier(ctx, identity.tokenIdentifier);
 
     if (user) {
       await ctx.db.patch(user._id, {
+        workosUserId: args.user.workosUserId,
         email: args.user.email,
-        firstName: args.user.firstName,
-        lastName: args.user.lastName,
+        firstName: args.user.firstName ?? undefined,
+        lastName: args.user.lastName ?? undefined,
         updatedAt: timestamp,
       });
-      user = await ctx.db.get(user._id);
+      user = (await ctx.db.get(user._id))!;
     } else {
       const userId = await ctx.db.insert("users", {
-        ...args.user,
+        tokenIdentifier: identity.tokenIdentifier,
+        workosUserId: args.user.workosUserId,
+        email: args.user.email,
+        firstName: args.user.firstName ?? undefined,
+        lastName: args.user.lastName ?? undefined,
         createdAt: timestamp,
         updatedAt: timestamp,
       });
-      user = await ctx.db.get(userId);
+      user = (await ctx.db.get(userId))!;
     }
 
-    if (!args.organization || !user) return null;
+    if (!args.organization) {
+      return mapUser(user);
+    }
 
     let organization = await getOrganizationByWorkosOrgId(
       ctx,
@@ -198,7 +285,7 @@ export const syncSession = mutation({
         name: args.organization.name,
         updatedAt: timestamp,
       });
-      organization = await ctx.db.get(organization._id);
+      organization = (await ctx.db.get(organization._id))!;
     } else {
       const organizationId = await ctx.db.insert("organizations", {
         workosOrgId: args.organization.workosOrgId,
@@ -207,16 +294,15 @@ export const syncSession = mutation({
         createdAt: timestamp,
         updatedAt: timestamp,
       });
-      organization = await ctx.db.get(organizationId);
+      organization = (await ctx.db.get(organizationId))!;
     }
 
     const membership = await ctx.db
       .query("memberships")
-      .withIndex("by_organization_id", (q: any) =>
-        q.eq("organizationId", organization._id),
+      .withIndex("by_organization_id_and_user_id", (q) =>
+        q.eq("organizationId", organization._id).eq("userId", user._id),
       )
-      .collect()
-      .then((rows: any[]) => rows.find((row) => row.userId === user._id));
+      .unique();
 
     if (!membership) {
       await ctx.db.insert("memberships", {
@@ -227,7 +313,7 @@ export const syncSession = mutation({
       });
     }
 
-    return null;
+    return mapUser(user);
   },
 });
 
@@ -235,12 +321,12 @@ export const createOrganization = mutation({
   args: {
     workosOrgId: v.string(),
     name: v.string(),
-    userWorkosId: v.string(),
   },
   handler: async (ctx, args) => {
+    const { viewer } = await requireViewer(ctx);
     const timestamp = now();
-    let organization = await getOrganizationByWorkosOrgId(ctx, args.workosOrgId);
 
+    let organization = await getOrganizationByWorkosOrgId(ctx, args.workosOrgId);
     if (!organization) {
       const organizationId = await ctx.db.insert("organizations", {
         workosOrgId: args.workosOrgId,
@@ -249,49 +335,48 @@ export const createOrganization = mutation({
         createdAt: timestamp,
         updatedAt: timestamp,
       });
-      organization = await ctx.db.get(organizationId);
+      organization = (await ctx.db.get(organizationId))!;
     }
 
-    const user = await getUserByWorkosUserId(ctx, args.userWorkosId);
-    if (user) {
-      const membership = await ctx.db
-        .query("memberships")
-        .withIndex("by_organization_id", (q: any) =>
-          q.eq("organizationId", organization._id),
-        )
-        .collect()
-        .then((rows: any[]) => rows.find((row) => row.userId === user._id));
+    const membership = await ctx.db
+      .query("memberships")
+      .withIndex("by_organization_id_and_user_id", (q) =>
+        q.eq("organizationId", organization._id).eq("userId", viewer._id),
+      )
+      .unique();
 
-      if (!membership) {
-        await ctx.db.insert("memberships", {
-          organizationId: organization._id,
-          userId: user._id,
-          role: "admin",
-          joinedAt: timestamp,
-        });
-      }
+    if (!membership) {
+      await ctx.db.insert("memberships", {
+        organizationId: organization._id,
+        userId: viewer._id,
+        role: "admin",
+        joinedAt: timestamp,
+      });
     }
 
-    return mapOrg(organization);
+    return mapOrganization(organization);
   },
 });
 
 export const getOrgDashboard = query({
   args: { workosOrgId: v.string() },
   handler: async (ctx, args) => {
-    const org = await getOrganizationByWorkosOrgId(ctx, args.workosOrgId);
-    if (!org) return { org: null, projects: [] };
+    const organization = await getOrganizationByWorkosOrgId(ctx, args.workosOrgId);
+    if (!organization) {
+      return { org: null, projects: [] };
+    }
+
+    await requireMembership(ctx, organization._id);
 
     const projects = await ctx.db
       .query("projects")
-      .withIndex("by_org_id", (q: any) => q.eq("orgId", org._id))
-      .collect();
+      .withIndex("by_org_id", (q) => q.eq("orgId", organization._id))
+      .order("desc")
+      .take(100);
 
     return {
-      org: mapOrg(org),
-      projects: projects
-        .map(mapProject)
-        .sort((a: any, b: any) => b.updatedAt - a.updatedAt),
+      org: mapOrganization(organization),
+      projects: projects.map(mapProject),
     };
   },
 });
@@ -302,54 +387,60 @@ export const createProject = mutation({
     name: v.string(),
   },
   handler: async (ctx, args) => {
-    const org = await getOrganizationByWorkosOrgId(ctx, args.workosOrgId);
-    if (!org) {
+    const organization = await getOrganizationByWorkosOrgId(ctx, args.workosOrgId);
+    if (!organization) {
       throw new Error("Organization not found.");
     }
 
+    await requireMembership(ctx, organization._id);
+
     const timestamp = now();
-    const publicId = createPublicId("proj");
     const projectId = await ctx.db.insert("projects", {
-      orgId: org._id,
-      publicId,
+      orgId: organization._id,
+      publicId: createPublicId("proj"),
       name: args.name,
-      slug: slugify(args.name) || publicId,
+      slug: slugify(args.name) || createPublicId("slug"),
       createdAt: timestamp,
       updatedAt: timestamp,
     });
 
-    const project = await ctx.db.get(projectId);
-    return mapProject(project);
+    return mapProject((await ctx.db.get(projectId))!);
   },
 });
 
 export const getProjectOverview = query({
   args: { projectPublicId: v.string() },
   handler: async (ctx, args) => {
-    const project = await getProjectByPublicId(ctx, args.projectPublicId);
-    if (!project) {
-      return { project: null, repositories: [], pullRequests: [] };
-    }
+    const project = await requireProjectAccess(ctx, args.projectPublicId);
 
     const [repositories, pullRequests] = await Promise.all([
       ctx.db
         .query("repositories")
-        .withIndex("by_project_id", (q: any) => q.eq("projectId", project._id))
-        .collect(),
+        .withIndex("by_project_id", (q) => q.eq("projectId", project._id))
+        .order("desc")
+        .take(100),
       ctx.db
         .query("pullRequests")
-        .withIndex("by_project_id", (q: any) => q.eq("projectId", project._id))
-        .collect(),
+        .withIndex("by_project_id", (q) => q.eq("projectId", project._id))
+        .order("desc")
+        .take(100),
     ]);
+
+    const repositoryById = new Map(
+      repositories.map((repository) => [repository._id, repository]),
+    );
 
     return {
       project: mapProject(project),
-      repositories: repositories
-        .map(mapRepo)
-        .sort((a: any, b: any) => a.repoName.localeCompare(b.repoName)),
-      pullRequests: pullRequests
-        .map(mapPullRequest)
-        .sort((a: any, b: any) => b.updatedAt - a.updatedAt),
+      repositories: repositories.map(mapRepository),
+      pullRequests: pullRequests.map((pullRequest) =>
+        mapPullRequest(
+          pullRequest,
+          pullRequest.repositoryId
+            ? repositoryById.get(pullRequest.repositoryId)?.publicId ?? null
+            : null,
+        ),
+      ),
     };
   },
 });
@@ -362,10 +453,9 @@ export const createRepository = mutation({
     defaultBranch: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
-    const project = await getProjectByPublicId(ctx, args.projectPublicId);
-    if (!project) throw new Error("Project not found.");
-
+    const project = await requireProjectAccess(ctx, args.projectPublicId);
     const timestamp = now();
+
     const repositoryId = await ctx.db.insert("repositories", {
       projectId: project._id,
       publicId: createPublicId("repo"),
@@ -378,7 +468,7 @@ export const createRepository = mutation({
       updatedAt: timestamp,
     });
 
-    return mapRepo(await ctx.db.get(repositoryId));
+    return mapRepository((await ctx.db.get(repositoryId))!);
   },
 });
 
@@ -395,19 +485,20 @@ export const createPullRequest = mutation({
     headBranch: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
-    const project = await getProjectByPublicId(ctx, args.projectPublicId);
-    if (!project) throw new Error("Project not found.");
+    const project = await requireProjectAccess(ctx, args.projectPublicId);
+    const repository = args.repositoryPublicId
+      ? await getRepositoryByPublicId(ctx, args.repositoryPublicId)
+      : null;
 
-    if (args.repositoryPublicId) {
-      const repository = await getRepositoryByPublicId(ctx, args.repositoryPublicId);
-      if (!repository) throw new Error("Repository not found.");
+    if (args.repositoryPublicId && !repository) {
+      throw new Error("Repository not found.");
     }
 
     const timestamp = now();
     const pullRequestId = await ctx.db.insert("pullRequests", {
       projectId: project._id,
+      repositoryId: repository?._id,
       publicId: createPublicId("pr"),
-      repositoryPublicId: args.repositoryPublicId,
       number: args.number,
       title: args.title,
       status: args.status ?? "open",
@@ -419,26 +510,27 @@ export const createPullRequest = mutation({
       updatedAt: timestamp,
     });
 
-    return mapPullRequest(await ctx.db.get(pullRequestId));
+    return mapPullRequest(
+      (await ctx.db.get(pullRequestId))!,
+      repository?.publicId ?? null,
+    );
   },
 });
 
 export const getProjectReleases = query({
   args: { projectPublicId: v.string() },
   handler: async (ctx, args) => {
-    const project = await getProjectByPublicId(ctx, args.projectPublicId);
-    if (!project) return { project: null, releases: [] };
+    const project = await requireProjectAccess(ctx, args.projectPublicId);
 
     const releases = await ctx.db
       .query("releasePackets")
-      .withIndex("by_project_id", (q: any) => q.eq("projectId", project._id))
-      .collect();
+      .withIndex("by_project_id", (q) => q.eq("projectId", project._id))
+      .order("desc")
+      .take(100);
 
     return {
       project: mapProject(project),
-      releases: releases
-        .map(mapRelease)
-        .sort((a: any, b: any) => b.updatedAt - a.updatedAt),
+      releases: releases.map(mapReleasePacket),
     };
   },
 });
@@ -450,11 +542,10 @@ export const createRelease = mutation({
     description: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
-    const project = await getProjectByPublicId(ctx, args.projectPublicId);
-    if (!project) throw new Error("Project not found.");
-
+    const project = await requireProjectAccess(ctx, args.projectPublicId);
     const timestamp = now();
-    const releaseId = await ctx.db.insert("releasePackets", {
+
+    const releasePacketId = await ctx.db.insert("releasePackets", {
       projectId: project._id,
       publicId: createPublicId("rel"),
       name: args.name,
@@ -463,38 +554,67 @@ export const createRelease = mutation({
       outcome: "",
       successMetric: "",
       shipPlan: "",
-      pullRequestPublicIds: [],
-      items: [],
-      participants: [],
-      dependencies: [],
       createdAt: timestamp,
       updatedAt: timestamp,
     });
 
-    return mapRelease(await ctx.db.get(releaseId));
+    return mapReleasePacket((await ctx.db.get(releasePacketId))!);
   },
 });
 
 export const deleteRelease = mutation({
   args: { releasePublicId: v.string() },
   handler: async (ctx, args) => {
-    const release = await getReleaseByPublicId(ctx, args.releasePublicId);
-    if (!release) throw new Error("Release not found.");
+    const { release } = await requireReleaseAccess(ctx, args.releasePublicId);
+
+    for (const item of await ctx.db
+      .query("releaseItems")
+      .withIndex("by_release_packet_id", (q) =>
+        q.eq("releasePacketId", release._id),
+      )
+      .take(100)) {
+      await ctx.db.delete(item._id);
+    }
+
+    for (const participant of await ctx.db
+      .query("releaseParticipants")
+      .withIndex("by_release_packet_id", (q) =>
+        q.eq("releasePacketId", release._id),
+      )
+      .take(100)) {
+      await ctx.db.delete(participant._id);
+    }
+
+    for (const releasePullRequest of await ctx.db
+      .query("releasePacketPullRequests")
+      .withIndex("by_release_packet_id", (q) =>
+        q.eq("releasePacketId", release._id),
+      )
+      .take(100)) {
+      await ctx.db.delete(releasePullRequest._id);
+    }
+
+    for (const dependency of await ctx.db
+      .query("releaseDependencies")
+      .withIndex("by_release_packet_id", (q) =>
+        q.eq("releasePacketId", release._id),
+      )
+      .take(100)) {
+      await ctx.db.delete(dependency._id);
+    }
+
     await ctx.db.delete(release._id);
     return null;
   },
 });
 
 export const getReleaseDetail = query({
-  args: {
-    projectPublicId: v.string(),
-    releasePublicId: v.string(),
-  },
+  args: { projectPublicId: v.string(), releasePublicId: v.string() },
   handler: async (ctx, args) => {
-    const project = await getProjectByPublicId(ctx, args.projectPublicId);
+    const project = await requireProjectAccess(ctx, args.projectPublicId);
     const release = await getReleaseByPublicId(ctx, args.releasePublicId);
 
-    if (!project || !release || release.projectId !== project._id) {
+    if (!release || release.projectId !== project._id) {
       return {
         project: null,
         release: null,
@@ -504,30 +624,108 @@ export const getReleaseDetail = query({
       };
     }
 
-    const [repositories, pullRequests, memberships] = await Promise.all([
-      ctx.db
-        .query("repositories")
-        .withIndex("by_project_id", (q: any) => q.eq("projectId", project._id))
-        .collect(),
-      ctx.db
-        .query("pullRequests")
-        .withIndex("by_project_id", (q: any) => q.eq("projectId", project._id))
-        .collect(),
-      ctx.db
-        .query("memberships")
-        .withIndex("by_organization_id", (q: any) => q.eq("organizationId", project.orgId))
-        .collect(),
-    ]);
+    const [repositories, pullRequests, releaseItems, releaseParticipants, releasePullRequests, dependencies, memberships] =
+      await Promise.all([
+        ctx.db
+          .query("repositories")
+          .withIndex("by_project_id", (q) => q.eq("projectId", project._id))
+          .order("desc")
+          .take(100),
+        ctx.db
+          .query("pullRequests")
+          .withIndex("by_project_id", (q) => q.eq("projectId", project._id))
+          .order("desc")
+          .take(100),
+        ctx.db
+          .query("releaseItems")
+          .withIndex("by_release_packet_id", (q) =>
+            q.eq("releasePacketId", release._id),
+          )
+          .order("desc")
+          .take(100),
+        ctx.db
+          .query("releaseParticipants")
+          .withIndex("by_release_packet_id", (q) =>
+            q.eq("releasePacketId", release._id),
+          )
+          .order("desc")
+          .take(100),
+        ctx.db
+          .query("releasePacketPullRequests")
+          .withIndex("by_release_packet_id", (q) =>
+            q.eq("releasePacketId", release._id),
+          )
+          .order("desc")
+          .take(100),
+        ctx.db
+          .query("releaseDependencies")
+          .withIndex("by_release_packet_id", (q) =>
+            q.eq("releasePacketId", release._id),
+          )
+          .order("desc")
+          .take(100),
+        ctx.db
+          .query("memberships")
+          .withIndex("by_organization_id", (q) => q.eq("organizationId", project.orgId))
+          .take(100),
+      ]);
 
-    const orgUsers = await Promise.all(
-      memberships.map(async (membership: any) => mapUser(await ctx.db.get(membership.userId))),
+    const repositoryById = new Map(
+      repositories.map((repository) => [repository._id, repository]),
     );
+    const pullRequestById = new Map(
+      pullRequests.map((pullRequest) => [pullRequest._id, pullRequest]),
+    );
+
+    const orgUsers = (
+      await Promise.all(
+        memberships.map(async (membership) => {
+          const user = await ctx.db.get(membership.userId);
+          return user ? mapUser(user) : null;
+        }),
+      )
+    ).filter((user): user is NonNullable<typeof user> => user !== null);
 
     return {
       project: mapProject(project),
-      release: mapRelease(release),
-      repositories: repositories.map(mapRepo),
-      pullRequests: pullRequests.map(mapPullRequest),
+      release: {
+        ...mapReleasePacket(release),
+        pullRequestPublicIds: releasePullRequests
+          .map((row) => pullRequestById.get(row.pullRequestId)?.publicId ?? null)
+          .filter((value): value is string => value !== null),
+        items: releaseItems.map((item) => ({
+          id: item._id,
+          title: item.title,
+          details: item.details,
+          kind: item.kind,
+          status: item.status,
+        })),
+        participants: releaseParticipants.map((participant) => ({
+          id: participant._id,
+          userId: participant.userId ?? null,
+          name: participant.name,
+          email: participant.email ?? null,
+          role: participant.role,
+          status: participant.status,
+          notes: participant.notes,
+        })),
+        dependencies: dependencies.map((dependency) => ({
+          id: dependency._id,
+          blockingPullRequestPublicId:
+            pullRequestById.get(dependency.blockingPullRequestId)?.publicId ?? "",
+          blockedPullRequestPublicId:
+            pullRequestById.get(dependency.blockedPullRequestId)?.publicId ?? "",
+        })),
+      },
+      repositories: repositories.map(mapRepository),
+      pullRequests: pullRequests.map((pullRequest) =>
+        mapPullRequest(
+          pullRequest,
+          pullRequest.repositoryId
+            ? repositoryById.get(pullRequest.repositoryId)?.publicId ?? null
+            : null,
+        ),
+      ),
       orgUsers,
     };
   },
@@ -552,8 +750,7 @@ export const updateRelease = mutation({
     shipPlan: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
-    const release = await getReleaseByPublicId(ctx, args.releasePublicId);
-    if (!release) throw new Error("Release not found.");
+    const { release } = await requireReleaseAccess(ctx, args.releasePublicId);
 
     await ctx.db.patch(release._id, {
       name: args.name ?? release.name,
@@ -565,7 +762,7 @@ export const updateRelease = mutation({
       updatedAt: now(),
     });
 
-    return mapRelease(await ctx.db.get(release._id));
+    return mapReleasePacket((await getReleaseById(ctx, release._id))!);
   },
 });
 
@@ -579,30 +776,34 @@ export const addReleaseItem = mutation({
     ),
   },
   handler: async (ctx, args) => {
-    const release = await getReleaseByPublicId(ctx, args.releasePublicId);
-    if (!release) throw new Error("Release not found.");
+    const { release } = await requireReleaseAccess(ctx, args.releasePublicId);
+    const timestamp = now();
 
-    const item = {
-      id: createPublicId("item"),
+    const itemId = await ctx.db.insert("releaseItems", {
+      releasePacketId: release._id,
       title: args.title,
       details: args.details ?? "",
       kind: args.kind ?? "task",
       status: "todo",
-    };
-
-    await ctx.db.patch(release._id, {
-      items: [...release.items, item],
-      updatedAt: now(),
+      createdAt: timestamp,
+      updatedAt: timestamp,
     });
 
-    return item;
+    const item = (await ctx.db.get(itemId))!;
+    return {
+      id: item._id,
+      title: item.title,
+      details: item.details,
+      kind: item.kind,
+      status: item.status,
+    };
   },
 });
 
 export const updateReleaseItem = mutation({
   args: {
     releasePublicId: v.string(),
-    itemId: v.string(),
+    itemId: v.id("releaseItems"),
     title: v.optional(v.string()),
     details: v.optional(v.string()),
     kind: v.optional(
@@ -613,37 +814,40 @@ export const updateReleaseItem = mutation({
     ),
   },
   handler: async (ctx, args) => {
-    const release = await getReleaseByPublicId(ctx, args.releasePublicId);
-    if (!release) throw new Error("Release not found.");
+    const { release } = await requireReleaseAccess(ctx, args.releasePublicId);
+    const item = await ctx.db.get(args.itemId);
+    if (!item || item.releasePacketId !== release._id) {
+      throw new Error("Release item not found.");
+    }
 
-    const items = release.items.map((item: any) =>
-      item.id === args.itemId
-        ? {
-            ...item,
-            title: args.title ?? item.title,
-            details: args.details ?? item.details,
-            kind: args.kind ?? item.kind,
-            status: args.status ?? item.status,
-          }
-        : item,
-    );
+    await ctx.db.patch(item._id, {
+      title: args.title ?? item.title,
+      details: args.details ?? item.details,
+      kind: args.kind ?? item.kind,
+      status: args.status ?? item.status,
+      updatedAt: now(),
+    });
 
-    await ctx.db.patch(release._id, { items, updatedAt: now() });
-    return items.find((item: any) => item.id === args.itemId) ?? null;
+    const updated = (await ctx.db.get(item._id))!;
+    return {
+      id: updated._id,
+      title: updated.title,
+      details: updated.details,
+      kind: updated.kind,
+      status: updated.status,
+    };
   },
 });
 
 export const removeReleaseItem = mutation({
-  args: { releasePublicId: v.string(), itemId: v.string() },
+  args: { releasePublicId: v.string(), itemId: v.id("releaseItems") },
   handler: async (ctx, args) => {
-    const release = await getReleaseByPublicId(ctx, args.releasePublicId);
-    if (!release) throw new Error("Release not found.");
-
-    await ctx.db.patch(release._id, {
-      items: release.items.filter((item: any) => item.id !== args.itemId),
-      updatedAt: now(),
-    });
-
+    const { release } = await requireReleaseAccess(ctx, args.releasePublicId);
+    const item = await ctx.db.get(args.itemId);
+    if (!item || item.releasePacketId !== release._id) {
+      throw new Error("Release item not found.");
+    }
+    await ctx.db.delete(item._id);
     return null;
   },
 });
@@ -651,39 +855,44 @@ export const removeReleaseItem = mutation({
 export const addReleaseParticipant = mutation({
   args: {
     releasePublicId: v.string(),
-    userId: v.optional(v.string()),
+    userId: v.optional(v.id("users")),
     name: v.string(),
     email: v.optional(v.string()),
     role: v.string(),
     notes: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
-    const release = await getReleaseByPublicId(ctx, args.releasePublicId);
-    if (!release) throw new Error("Release not found.");
-
-    const participant = {
-      id: createPublicId("part"),
+    const { release } = await requireReleaseAccess(ctx, args.releasePublicId);
+    const timestamp = now();
+    const participantId = await ctx.db.insert("releaseParticipants", {
+      releasePacketId: release._id,
       userId: args.userId,
       name: args.name,
       email: args.email,
       role: args.role,
       status: "pending",
       notes: args.notes ?? "",
-    };
-
-    await ctx.db.patch(release._id, {
-      participants: [...release.participants, participant],
-      updatedAt: now(),
+      createdAt: timestamp,
+      updatedAt: timestamp,
     });
 
-    return participant;
+    const participant = (await ctx.db.get(participantId))!;
+    return {
+      id: participant._id,
+      userId: participant.userId ?? null,
+      name: participant.name,
+      email: participant.email ?? null,
+      role: participant.role,
+      status: participant.status,
+      notes: participant.notes,
+    };
   },
 });
 
 export const updateReleaseParticipant = mutation({
   args: {
     releasePublicId: v.string(),
-    participantId: v.string(),
+    participantId: v.id("releaseParticipants"),
     role: v.optional(v.string()),
     status: v.optional(
       v.union(
@@ -695,42 +904,44 @@ export const updateReleaseParticipant = mutation({
     notes: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
-    const release = await getReleaseByPublicId(ctx, args.releasePublicId);
-    if (!release) throw new Error("Release not found.");
+    const { release } = await requireReleaseAccess(ctx, args.releasePublicId);
+    const participant = await ctx.db.get(args.participantId);
+    if (!participant || participant.releasePacketId !== release._id) {
+      throw new Error("Release participant not found.");
+    }
 
-    const participants = release.participants.map((participant: any) =>
-      participant.id === args.participantId
-        ? {
-            ...participant,
-            role: args.role ?? participant.role,
-            status: args.status ?? participant.status,
-            notes: args.notes ?? participant.notes,
-          }
-        : participant,
-    );
-
-    await ctx.db.patch(release._id, {
-      participants,
+    await ctx.db.patch(participant._id, {
+      role: args.role ?? participant.role,
+      status: args.status ?? participant.status,
+      notes: args.notes ?? participant.notes,
       updatedAt: now(),
     });
 
-    return participants.find((participant: any) => participant.id === args.participantId) ?? null;
+    const updated = (await ctx.db.get(participant._id))!;
+    return {
+      id: updated._id,
+      userId: updated.userId ?? null,
+      name: updated.name,
+      email: updated.email ?? null,
+      role: updated.role,
+      status: updated.status,
+      notes: updated.notes,
+    };
   },
 });
 
 export const removeReleaseParticipant = mutation({
-  args: { releasePublicId: v.string(), participantId: v.string() },
+  args: {
+    releasePublicId: v.string(),
+    participantId: v.id("releaseParticipants"),
+  },
   handler: async (ctx, args) => {
-    const release = await getReleaseByPublicId(ctx, args.releasePublicId);
-    if (!release) throw new Error("Release not found.");
-
-    await ctx.db.patch(release._id, {
-      participants: release.participants.filter(
-        (participant: any) => participant.id !== args.participantId,
-      ),
-      updatedAt: now(),
-    });
-
+    const { release } = await requireReleaseAccess(ctx, args.releasePublicId);
+    const participant = await ctx.db.get(args.participantId);
+    if (!participant || participant.releasePacketId !== release._id) {
+      throw new Error("Release participant not found.");
+    }
+    await ctx.db.delete(participant._id);
     return null;
   },
 });
@@ -741,19 +952,24 @@ export const attachPullRequestToRelease = mutation({
     pullRequestPublicId: v.string(),
   },
   handler: async (ctx, args) => {
-    const [release, pullRequest] = await Promise.all([
-      getReleaseByPublicId(ctx, args.releasePublicId),
-      getPullRequestByPublicId(ctx, args.pullRequestPublicId),
-    ]);
-    if (!release || !pullRequest) throw new Error("Release or pull request not found.");
+    const { release } = await requireReleaseAccess(ctx, args.releasePublicId);
+    const pullRequest = await getPullRequestByPublicId(ctx, args.pullRequestPublicId);
+    if (!pullRequest || pullRequest.projectId !== release.projectId) {
+      throw new Error("Pull request not found.");
+    }
 
-    if (!release.pullRequestPublicIds.includes(args.pullRequestPublicId)) {
-      await ctx.db.patch(release._id, {
-        pullRequestPublicIds: [
-          ...release.pullRequestPublicIds,
-          args.pullRequestPublicId,
-        ],
-        updatedAt: now(),
+    const existing = await ctx.db
+      .query("releasePacketPullRequests")
+      .withIndex("by_release_packet_id_and_pull_request_id", (q) =>
+        q.eq("releasePacketId", release._id).eq("pullRequestId", pullRequest._id),
+      )
+      .unique();
+
+    if (!existing) {
+      await ctx.db.insert("releasePacketPullRequests", {
+        releasePacketId: release._id,
+        pullRequestId: pullRequest._id,
+        createdAt: now(),
       });
     }
 
@@ -767,20 +983,36 @@ export const detachPullRequestFromRelease = mutation({
     pullRequestPublicId: v.string(),
   },
   handler: async (ctx, args) => {
-    const release = await getReleaseByPublicId(ctx, args.releasePublicId);
-    if (!release) throw new Error("Release not found.");
+    const { release } = await requireReleaseAccess(ctx, args.releasePublicId);
+    const pullRequest = await getPullRequestByPublicId(ctx, args.pullRequestPublicId);
+    if (!pullRequest) {
+      throw new Error("Pull request not found.");
+    }
 
-    await ctx.db.patch(release._id, {
-      pullRequestPublicIds: release.pullRequestPublicIds.filter(
-        (value: string) => value !== args.pullRequestPublicId,
-      ),
-      dependencies: release.dependencies.filter(
-        (dependency: any) =>
-          dependency.blockingPullRequestPublicId !== args.pullRequestPublicId &&
-          dependency.blockedPullRequestPublicId !== args.pullRequestPublicId,
-      ),
-      updatedAt: now(),
-    });
+    const row = await ctx.db
+      .query("releasePacketPullRequests")
+      .withIndex("by_release_packet_id_and_pull_request_id", (q) =>
+        q.eq("releasePacketId", release._id).eq("pullRequestId", pullRequest._id),
+      )
+      .unique();
+
+    if (row) {
+      await ctx.db.delete(row._id);
+    }
+
+    for (const dependency of await ctx.db
+      .query("releaseDependencies")
+      .withIndex("by_release_packet_id", (q) =>
+        q.eq("releasePacketId", release._id),
+      )
+      .take(100)) {
+      if (
+        dependency.blockingPullRequestId === pullRequest._id ||
+        dependency.blockedPullRequestId === pullRequest._id
+      ) {
+        await ctx.db.delete(dependency._id);
+      }
+    }
 
     return null;
   },
@@ -793,29 +1025,38 @@ export const addReleaseDependency = mutation({
     blockedPullRequestPublicId: v.string(),
   },
   handler: async (ctx, args) => {
-    const release = await getReleaseByPublicId(ctx, args.releasePublicId);
-    if (!release) throw new Error("Release not found.");
+    const { release } = await requireReleaseAccess(ctx, args.releasePublicId);
+    const [blocking, blocked] = await Promise.all([
+      getPullRequestByPublicId(ctx, args.blockingPullRequestPublicId),
+      getPullRequestByPublicId(ctx, args.blockedPullRequestPublicId),
+    ]);
+
+    if (!blocking || !blocked) {
+      throw new Error("Pull requests not found.");
+    }
+
+    const existing = await ctx.db
+      .query("releaseDependencies")
+      .withIndex("by_release_packet_id", (q) =>
+        q.eq("releasePacketId", release._id),
+      )
+      .take(100);
 
     if (
-      release.dependencies.some(
-        (dependency: any) =>
-          dependency.blockingPullRequestPublicId === args.blockingPullRequestPublicId &&
-          dependency.blockedPullRequestPublicId === args.blockedPullRequestPublicId,
+      existing.some(
+        (dependency) =>
+          dependency.blockingPullRequestId === blocking._id &&
+          dependency.blockedPullRequestId === blocked._id,
       )
     ) {
       return null;
     }
 
-    await ctx.db.patch(release._id, {
-      dependencies: [
-        ...release.dependencies,
-        {
-          id: createPublicId("dep"),
-          blockingPullRequestPublicId: args.blockingPullRequestPublicId,
-          blockedPullRequestPublicId: args.blockedPullRequestPublicId,
-        },
-      ],
-      updatedAt: now(),
+    await ctx.db.insert("releaseDependencies", {
+      releasePacketId: release._id,
+      blockingPullRequestId: blocking._id,
+      blockedPullRequestId: blocked._id,
+      createdAt: now(),
     });
 
     return null;
@@ -825,19 +1066,15 @@ export const addReleaseDependency = mutation({
 export const removeReleaseDependency = mutation({
   args: {
     releasePublicId: v.string(),
-    dependencyId: v.string(),
+    dependencyId: v.id("releaseDependencies"),
   },
   handler: async (ctx, args) => {
-    const release = await getReleaseByPublicId(ctx, args.releasePublicId);
-    if (!release) throw new Error("Release not found.");
-
-    await ctx.db.patch(release._id, {
-      dependencies: release.dependencies.filter(
-        (dependency: any) => dependency.id !== args.dependencyId,
-      ),
-      updatedAt: now(),
-    });
-
+    const { release } = await requireReleaseAccess(ctx, args.releasePublicId);
+    const dependency = await ctx.db.get(args.dependencyId);
+    if (!dependency || dependency.releasePacketId !== release._id) {
+      throw new Error("Dependency not found.");
+    }
+    await ctx.db.delete(dependency._id);
     return null;
   },
 });

@@ -1,7 +1,7 @@
 "use server";
 
 import { getWorkOS, withAuth } from "@workos-inc/authkit-nextjs";
-import { convexMutation } from "@/lib/console/convexServer";
+import { convexCreateOrganization, convexSyncSession } from "@/lib/console/convexServer";
 
 export type CreateOrgResult =
   | { success: true; orgId: string }
@@ -24,7 +24,11 @@ export async function createOrganizationAction(
   }
 
   try {
-    const { user } = await withAuth({ ensureSignedIn: true });
+    const { user, accessToken } = await withAuth({ ensureSignedIn: true });
+    if (!accessToken) {
+      return { success: false, error: "Not authenticated." };
+    }
+
     const organization = await getWorkOS().organizations.createOrganization({
       name: trimmed,
     });
@@ -34,10 +38,22 @@ export async function createOrganizationAction(
       organizationId: organization.id,
     });
 
-    await convexMutation("console:createOrganization", {
+    await convexSyncSession(accessToken, {
+      user: {
+        workosUserId: user.id,
+        email: user.email,
+        firstName: user.firstName ?? null,
+        lastName: user.lastName ?? null,
+      },
+      organization: {
+        workosOrgId: organization.id,
+        name: organization.name,
+      },
+    });
+
+    await convexCreateOrganization(accessToken, {
       workosOrgId: organization.id,
       name: organization.name,
-      userWorkosId: user.id,
     });
 
     return { success: true, orgId: organization.id };

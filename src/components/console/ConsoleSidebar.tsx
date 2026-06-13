@@ -3,14 +3,14 @@
 import Link from "next/link";
 import { useParams, usePathname } from "next/navigation";
 import { useAuth } from "@workos-inc/authkit-nextjs/components";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery } from "convex/react";
 import { BrandLogo } from "@/components/ui/BrandLogo";
 import { ConnectionStatus } from "@/components/console/ConnectionStatus";
 import { ThemeToggle } from "@/components/ui/ThemeToggle";
 import { UserAvatar } from "@/components/ui/UserAvatar";
 import { cn } from "@/lib/utils";
 import { signOutAction } from "@/actions/auth";
-import { getProjectOverview } from "@/lib/console/http";
+import { api } from "@convex/_generated/api";
 import { Menu } from "@base-ui/react/menu";
 import {
   Building2,
@@ -138,12 +138,10 @@ function NavLink({
 function ProjectDisplay() {
   const params = useParams();
   const projectPublicId = params?.projectId as string | undefined;
-  const { data } = useQuery({
-    queryKey: ["project-overview", projectPublicId],
-    queryFn: () => getProjectOverview(projectPublicId ?? ""),
-    enabled: Boolean(projectPublicId),
-    staleTime: 30_000,
-  });
+  const data = useQuery(
+    api.console.getProjectOverview,
+    projectPublicId ? { projectPublicId } : "skip",
+  );
   const projectName = data?.project?.name;
 
   return (

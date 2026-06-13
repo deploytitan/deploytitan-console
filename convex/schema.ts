@@ -1,43 +1,18 @@
 import { defineSchema, defineTable } from "convex/server";
 import { v } from "convex/values";
 
-const releaseItem = v.object({
-  id: v.string(),
-  title: v.string(),
-  details: v.string(),
-  kind: v.union(v.literal("task"), v.literal("risk"), v.literal("note")),
-  status: v.union(v.literal("todo"), v.literal("doing"), v.literal("done")),
-});
-
-const releaseParticipant = v.object({
-  id: v.string(),
-  userId: v.optional(v.string()),
-  name: v.string(),
-  email: v.optional(v.string()),
-  role: v.string(),
-  status: v.union(
-    v.literal("pending"),
-    v.literal("confirmed"),
-    v.literal("complete"),
-  ),
-  notes: v.string(),
-});
-
-const releaseDependency = v.object({
-  id: v.string(),
-  blockingPullRequestPublicId: v.string(),
-  blockedPullRequestPublicId: v.string(),
-});
-
 export default defineSchema({
   users: defineTable({
-    workosUserId: v.string(),
-    email: v.string(),
+    tokenIdentifier: v.string(),
+    workosUserId: v.optional(v.string()),
+    email: v.optional(v.string()),
     firstName: v.optional(v.string()),
     lastName: v.optional(v.string()),
     createdAt: v.number(),
     updatedAt: v.number(),
-  }).index("by_workos_user_id", ["workosUserId"]),
+  })
+    .index("by_token_identifier", ["tokenIdentifier"])
+    .index("by_workos_user_id", ["workosUserId"]),
 
   organizations: defineTable({
     workosOrgId: v.string(),
@@ -54,7 +29,8 @@ export default defineSchema({
     joinedAt: v.number(),
   })
     .index("by_organization_id", ["organizationId"])
-    .index("by_user_id", ["userId"]),
+    .index("by_user_id", ["userId"])
+    .index("by_organization_id_and_user_id", ["organizationId", "userId"]),
 
   projects: defineTable({
     orgId: v.id("organizations"),
@@ -83,8 +59,8 @@ export default defineSchema({
 
   pullRequests: defineTable({
     projectId: v.id("projects"),
+    repositoryId: v.optional(v.id("repositories")),
     publicId: v.string(),
-    repositoryPublicId: v.optional(v.string()),
     number: v.optional(v.number()),
     title: v.string(),
     status: v.string(),
@@ -97,6 +73,7 @@ export default defineSchema({
     updatedAt: v.number(),
   })
     .index("by_project_id", ["projectId"])
+    .index("by_repository_id", ["repositoryId"])
     .index("by_public_id", ["publicId"]),
 
   releasePackets: defineTable({
@@ -114,13 +91,54 @@ export default defineSchema({
     outcome: v.string(),
     successMetric: v.string(),
     shipPlan: v.string(),
-    pullRequestPublicIds: v.array(v.string()),
-    items: v.array(releaseItem),
-    participants: v.array(releaseParticipant),
-    dependencies: v.array(releaseDependency),
     createdAt: v.number(),
     updatedAt: v.number(),
   })
     .index("by_project_id", ["projectId"])
     .index("by_public_id", ["publicId"]),
+
+  releaseItems: defineTable({
+    releasePacketId: v.id("releasePackets"),
+    title: v.string(),
+    details: v.string(),
+    kind: v.union(v.literal("task"), v.literal("risk"), v.literal("note")),
+    status: v.union(v.literal("todo"), v.literal("doing"), v.literal("done")),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  }).index("by_release_packet_id", ["releasePacketId"]),
+
+  releaseParticipants: defineTable({
+    releasePacketId: v.id("releasePackets"),
+    userId: v.optional(v.id("users")),
+    name: v.string(),
+    email: v.optional(v.string()),
+    role: v.string(),
+    status: v.union(
+      v.literal("pending"),
+      v.literal("confirmed"),
+      v.literal("complete"),
+    ),
+    notes: v.string(),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  }).index("by_release_packet_id", ["releasePacketId"]),
+
+  releasePacketPullRequests: defineTable({
+    releasePacketId: v.id("releasePackets"),
+    pullRequestId: v.id("pullRequests"),
+    createdAt: v.number(),
+  })
+    .index("by_release_packet_id", ["releasePacketId"])
+    .index("by_pull_request_id", ["pullRequestId"])
+    .index("by_release_packet_id_and_pull_request_id", [
+      "releasePacketId",
+      "pullRequestId",
+    ]),
+
+  releaseDependencies: defineTable({
+    releasePacketId: v.id("releasePackets"),
+    blockingPullRequestId: v.id("pullRequests"),
+    blockedPullRequestId: v.id("pullRequests"),
+    createdAt: v.number(),
+  }).index("by_release_packet_id", ["releasePacketId"]),
 });

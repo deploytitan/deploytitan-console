@@ -1,16 +1,16 @@
 # DeployTitan Console
 
 DeployTitan now ships from this repo as a `Next.js + Convex + WorkOS` app. The
-old GCP, Zero cache, and Postgres-backed product path is deprecated.
+old GCP, Zero, and Postgres-backed path is retired.
 
 ## Architecture
 
 - `app/`
-  - App Router UI and local route handlers
+  - App Router UI, auth flows, and console pages
 - `convex/`
   - Product data model and backend functions
 - `src/lib/console/`
-  - Next-to-Convex server bridge and typed client helpers
+  - Server-side helpers for WorkOS-to-Convex session sync
 
 For product work, build here first. Do not add new product backend logic to the
 legacy monorepo.

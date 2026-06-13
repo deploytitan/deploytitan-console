@@ -1,6 +1,7 @@
 import { useCallback } from "react";
+import { useMutation } from "convex/react";
 import { logFrontendEvent } from "@/lib/frontendTelemetry";
-import { createProject as createProjectRequest } from "@/lib/console/http";
+import { api } from "@convex/_generated/api";
 
 interface CreateProjectArgs {
   orgId: string;
@@ -14,6 +15,8 @@ interface CreatedProject {
 }
 
 export function useCreateProject() {
+  const createProject = useMutation(api.console.createProject);
+
   const create = useCallback(
     async (args: CreateProjectArgs): Promise<CreatedProject> => {
       logFrontendEvent({
@@ -22,14 +25,17 @@ export function useCreateProject() {
         context: { orgId: args.orgId, name: args.name },
       });
 
-      const project = await createProjectRequest(args);
+      const project = await createProject({
+        workosOrgId: args.orgId,
+        name: args.name,
+      });
       return {
         id: project.id,
         publicId: project.publicId,
         name: project.name,
       };
     },
-    [],
+    [createProject],
   );
 
   return { create };
