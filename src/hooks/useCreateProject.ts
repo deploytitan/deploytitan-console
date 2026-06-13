@@ -1,14 +1,7 @@
-/**
- * useCreateProject — creates a project within an org via the Zero mutator.
- *
- * Returns an async `create` function that resolves after the local Zero write.
- */
-
 import { useCallback } from "react";
-import { useZero } from "@rocicorp/zero/react";
-import { createProjectIds, mutators } from "@deploytitan/zero-schema";
+import { useMutation } from "convex/react";
 import { logFrontendEvent } from "@/lib/frontendTelemetry";
-import { registerPendingMutation } from "@/store/pendingMutations";
+import { api } from "@convex/_generated/api";
 
 interface CreateProjectArgs {
   orgId: string;
@@ -22,34 +15,27 @@ interface CreatedProject {
 }
 
 export function useCreateProject() {
-  const zero = useZero();
+  const createProject = useMutation(api.console.createProject);
 
   const create = useCallback(
     async (args: CreateProjectArgs): Promise<CreatedProject> => {
-      const { id, publicId } = createProjectIds();
       logFrontendEvent({
         level: "info",
         message: "project.create.started",
-        context: { id, orgId: args.orgId, name: args.name },
+        context: { orgId: args.orgId, name: args.name },
       });
 
-      try {
-        const write = zero.mutate(
-          mutators.project.create({
-            id,
-            publicId,
-            orgId: args.orgId,
-            name: args.name,
-          }),
-        );
-        registerPendingMutation(write.server);
-        await write.client;
-        return { id, publicId, name: args.name };
-      } catch (error) {
-        throw error;
-      }
+      const project = await createProject({
+        workosOrgId: args.orgId,
+        name: args.name,
+      });
+      return {
+        id: project.id,
+        publicId: project.publicId,
+        name: project.name,
+      };
     },
-    [zero],
+    [createProject],
   );
 
   return { create };

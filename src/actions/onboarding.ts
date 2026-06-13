@@ -1,6 +1,7 @@
 "use server";
 
-import { withAuth } from "@workos-inc/authkit-nextjs";
+import { getWorkOS, withAuth } from "@workos-inc/authkit-nextjs";
+import { convexSyncSession } from "@/lib/console/convexServer";
 
 export type CreateOrgResult =
   | { success: true; orgId: string }
@@ -22,36 +23,35 @@ export async function createOrganizationAction(
     };
   }
 
-  const { accessToken } = await withAuth({ ensureSignedIn: true });
-
-  if (!accessToken) {
-    return { success: false, error: "Not authenticated." };
-  }
-
-  const origin = process.env.NEXT_PUBLIC_API_URL ?? "";
-
-  let data: { workosOrgId: string };
   try {
-    const res = await fetch(`${origin}/orgs`, {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${accessToken}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ name: trimmed }),
-      cache: "no-store",
-    });
-
-    if (!res.ok) {
-      const text = await res.text().catch(() => "");
-      console.error("[createOrganizationAction] POST /orgs failed", res.status, text);
-      return {
-        success: false,
-        error: "Failed to create organization. Please try again.",
-      };
+    const { user, accessToken } = await withAuth({ ensureSignedIn: true });
+    if (!accessToken) {
+      return { success: false, error: "Not authenticated." };
     }
 
-    data = await res.json();
+    const organization = await getWorkOS().organizations.createOrganization({
+      name: trimmed,
+    });
+
+    await getWorkOS().userManagement.createOrganizationMembership({
+      userId: user.id,
+      organizationId: organization.id,
+    });
+
+    await convexSyncSession(accessToken, {
+      user: {
+        workosUserId: user.id,
+        email: user.email,
+        firstName: user.firstName ?? null,
+        lastName: user.lastName ?? null,
+      },
+      organization: {
+        workosOrgId: organization.id,
+        name: organization.name,
+      },
+    });
+
+    return { success: true, orgId: organization.id };
   } catch (err) {
     console.error("[createOrganizationAction] fetch error", err);
     return {
@@ -59,6 +59,4 @@ export async function createOrganizationAction(
       error: "Failed to create organization. Please try again.",
     };
   }
-
-  return { success: true, orgId: data.workosOrgId };
 }

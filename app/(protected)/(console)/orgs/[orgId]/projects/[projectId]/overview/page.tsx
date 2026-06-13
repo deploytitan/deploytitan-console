@@ -1,59 +1,18 @@
 "use client";
 
-import { useParams } from "next/navigation";
-import { useQuery } from "@rocicorp/zero/react";
-import { queries } from "@deploytitan/zero-schema";
-import {
-  Shield,
-  GitBranch,
-  GitFork,
-  GitPullRequest,
-  AlertTriangle,
-  ExternalLink,
-  Clock,
-} from "lucide-react";
+import { useState } from "react";
 import Link from "next/link";
-
-// ── Helpers ────────────────────────────────────────────────────────────────────
-
-function formatDate(ts: number | null): string {
-  if (!ts) return "";
-  return new Intl.DateTimeFormat("en-US", {
-    month: "short",
-    day: "numeric",
-    year: "numeric",
-  }).format(new Date(ts));
-}
-
-function formatRelativeTime(ts: number | null): string {
-  if (!ts) return "";
-  const diff = Date.now() - ts;
-  const mins = Math.floor(diff / 60_000);
-  if (mins < 60) return `${mins}m ago`;
-  const hrs = Math.floor(mins / 60);
-  if (hrs < 24) return `${hrs}h ago`;
-  const days = Math.floor(hrs / 24);
-  if (days < 30) return `${days}d ago`;
-  return formatDate(ts);
-}
-
-// ── Skeleton ──────────────────────────────────────────────────────────────────
-
-function RowSkeleton({ count = 3 }: { count?: number }) {
-  return (
-    <div className="border border-border overflow-hidden" style={{ borderRadius: "4px" }}>
-      {Array.from({ length: count }).map((_, i) => (
-        <div
-          key={i}
-          className="h-[52px] animate-pulse bg-muted/40 border-b border-border/50 last:border-b-0"
-          style={{ animationDelay: `${i * 60}ms`, opacity: 1 - i * 0.2 }}
-        />
-      ))}
-    </div>
-  );
-}
-
-// ── Section label ─────────────────────────────────────────────────────────────
+import { useParams } from "next/navigation";
+import { useMutation, useQuery } from "convex/react";
+import {
+  ExternalLink,
+  FolderGit2,
+  GitBranch,
+  GitPullRequest,
+  Plus,
+} from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { api } from "@convex/_generated/api";
 
 function SectionLabel({
   children,
@@ -63,7 +22,7 @@ function SectionLabel({
   count?: number;
 }) {
   return (
-    <div className="flex items-center gap-2 mb-2">
+    <div className="flex items-center gap-2 mb-3">
       <span className="font-mono text-[9px] tracking-[0.08em] uppercase text-text-tertiary">
         {children}
       </span>
@@ -76,417 +35,224 @@ function SectionLabel({
   );
 }
 
-// ── Empty state ───────────────────────────────────────────────────────────────
-
-function EmptySection({ message }: { message: string }) {
+function InlineInput(props: React.InputHTMLAttributes<HTMLInputElement>) {
   return (
-    <div
-      className="flex items-center justify-center py-8 border border-border border-dashed"
+    <input
+      {...props}
+      className="w-full border border-border bg-background px-3 py-2 text-[12px] text-foreground outline-none"
       style={{ borderRadius: "4px" }}
-    >
-      <p className="text-[12px] text-text-tertiary">{message}</p>
-    </div>
+    />
   );
 }
 
-// ── Repositories ──────────────────────────────────────────────────────────────
-
-type Repository = {
-  id: string;
-  publicId: string | null;
-  repoVendor: string | null;
-  repoOwner: string;
-  repoName: string;
-  installationStatus: string | null;
-  defaultBranch: string | null;
-  createdAt: number | null;
-};
-
-const SIGNAL = {
-  success: {
-    color: 'var(--color-signal-success)',
-    bg: 'color-mix(in srgb, var(--color-signal-success) 8%, transparent)',
-    border: 'color-mix(in srgb, var(--color-signal-success) 20%, transparent)',
-  },
-  warning: {
-    color: 'var(--color-signal-warning)',
-    bg: 'color-mix(in srgb, var(--color-signal-warning) 8%, transparent)',
-    border: 'color-mix(in srgb, var(--color-signal-warning) 20%, transparent)',
-  },
-  danger: {
-    color: 'var(--color-signal-danger)',
-    bg: 'color-mix(in srgb, var(--color-signal-danger) 8%, transparent)',
-    border: 'color-mix(in srgb, var(--color-signal-danger) 20%, transparent)',
-  },
-  deploy: {
-    color: 'var(--color-signal-deploy)',
-    bg: 'color-mix(in srgb, var(--color-signal-deploy) 8%, transparent)',
-    border: 'color-mix(in srgb, var(--color-signal-deploy) 20%, transparent)',
-  },
-} as const;
-
-function SignalBadge({
-  variant,
-  children,
-  icon: Icon,
-}: {
-  variant: keyof typeof SIGNAL;
-  children: React.ReactNode;
-  icon?: React.ComponentType<{ className?: string; strokeWidth?: number }>;
-}) {
-  const s = SIGNAL[variant];
-  return (
-    <span
-      className="inline-flex items-center font-mono text-[8px] tracking-[0.06em] uppercase px-1.5 py-px border"
-      style={{ borderRadius: "1px", color: s.color, backgroundColor: s.bg, borderColor: s.border }}
-    >
-      {Icon && <Icon className="size-2 mr-0.5" strokeWidth={2} />}
-      {children}
-    </span>
-  );
-}
-
-function InstallationBadge({ status }: { status: string | null }) {
-  const s = status ?? "active";
-  const isSuspended = s === "suspended";
-
-  if (isSuspended) {
-    return (
-      <SignalBadge variant="warning" icon={AlertTriangle}>
-        {s}
-      </SignalBadge>
-    );
-  }
-  if (s === "active") {
-    return <SignalBadge variant="success">{s}</SignalBadge>;
-  }
-  return (
-    <span
-      className="inline-flex items-center font-mono text-[8px] tracking-[0.06em] uppercase px-1.5 py-px text-text-tertiary bg-muted/50 border border-border"
-      style={{ borderRadius: "1px" }}
-    >
-      {s}
-    </span>
-  );
-}
-
-function RepoRow({ repo }: { repo: Repository }) {
-  return (
-    <div className="group flex items-center gap-3 px-5 py-3 border-b border-border last:border-b-0 hover:bg-muted/40 transition-colors duration-100">
-      <GitFork
-        className="size-3.5 shrink-0 text-text-tertiary"
-        strokeWidth={1.5}
-      />
-      <div className="min-w-0 flex-1">
-        <span className="font-mono text-[12px] text-foreground tracking-tight">
-          {repo.repoOwner}
-          <span className="text-text-tertiary">/</span>
-          {repo.repoName}
-        </span>
-      </div>
-      <div className="flex items-center gap-2 shrink-0">
-        {repo.defaultBranch && (
-          <span className="hidden sm:flex items-center gap-1 font-mono text-[9px] tracking-[0.04em] text-text-tertiary">
-            <GitBranch className="size-2.5" strokeWidth={1.75} />
-            {repo.defaultBranch}
-          </span>
-        )}
-        <InstallationBadge status={repo.installationStatus} />
-      </div>
-    </div>
-  );
-}
-
-function RepositoriesSection({
-  repos,
-  loading,
-}: {
-  repos: Repository[];
-  loading: boolean;
-}) {
-  return (
-    <div>
-      <SectionLabel count={loading ? undefined : repos.length}>
-        Repositories
-      </SectionLabel>
-      {loading ? (
-        <RowSkeleton count={2} />
-      ) : repos.length === 0 ? (
-        <EmptySection message="No repositories connected" />
-      ) : (
-        <div
-          className="border border-border overflow-hidden"
-          style={{ borderRadius: "4px" }}
-        >
-          {repos.map((repo) => (
-            <RepoRow key={repo.id} repo={repo} />
-          ))}
-        </div>
-      )}
-    </div>
-  );
-}
-
-// ── Pull Requests ─────────────────────────────────────────────────────────────
-
-type PullRequest = {
-  id: string;
-  repoId: string;
-  prNumber: number;
-  title: string | null;
-  authorLogin: string | null;
-  htmlUrl: string | null;
-  sourceBranch: string | null;
-  state: string | null;
-  draft: boolean | null;
-  mergeStatus: string | null;
-  lastError: string | null;
-  updatedAt: number | null;
-};
-
-function MergeStatusBadge({ status }: { status: string | null }) {
-  if (!status || status === "pending") return null;
-
-  const map: Record<string, keyof typeof SIGNAL> = {
-    checking: "deploy",
-    merging: "warning",
-    merged: "success",
-    failed: "danger",
-    blocked: "warning",
-  };
-  const variant = map[status];
-  if (!variant) return null;
-
-  return <SignalBadge variant={variant}>{status}</SignalBadge>;
-}
-
-function StateBadge({ state, draft }: { state: string | null; draft: boolean | null }) {
-  if (draft) {
-    return (
-      <span
-        className="inline-flex items-center font-mono text-[8px] tracking-[0.06em] uppercase px-1.5 py-px text-text-tertiary bg-muted/60 border border-border"
-        style={{ borderRadius: "1px" }}
-      >
-        draft
-      </span>
-    );
-  }
-  if (state === "closed") {
-    return (
-      <span
-        className="inline-flex items-center font-mono text-[8px] tracking-[0.06em] uppercase px-1.5 py-px text-text-tertiary bg-muted/40 border border-border"
-        style={{ borderRadius: "1px" }}
-      >
-        closed
-      </span>
-    );
-  }
-  return <SignalBadge variant="success">open</SignalBadge>;
-}
-
-function PrRow({ pr, repoName }: { pr: PullRequest; repoName: string }) {
-  const content = (
-    <div className="group flex items-start gap-3 px-5 py-3 border-b border-border last:border-b-0 hover:bg-muted/40 transition-colors duration-100 cursor-pointer">
-      <GitPullRequest
-        className="size-3.5 shrink-0 mt-px text-text-tertiary"
-        strokeWidth={1.5}
-      />
-      <div className="min-w-0 flex-1">
-        <div className="flex items-center gap-2 flex-wrap">
-          <span className="font-mono text-[9px] text-text-tertiary shrink-0">
-            #{pr.prNumber}
-          </span>
-          <p className="text-[13px] text-foreground truncate leading-snug min-w-0 flex-1">
-            {pr.title || "Untitled PR"}
-          </p>
-        </div>
-        <div className="mt-0.5 flex items-center gap-2 flex-wrap">
-          <span className="font-mono text-[9px] tracking-[0.04em] text-text-tertiary">
-            {repoName}
-          </span>
-          {pr.authorLogin && (
-            <>
-              <span className="text-border select-none" aria-hidden>·</span>
-              <span className="font-mono text-[9px] text-text-tertiary">
-                {pr.authorLogin}
-              </span>
-            </>
-          )}
-        </div>
-      </div>
-      <div className="flex items-center gap-2 shrink-0 mt-px">
-        <StateBadge state={pr.state} draft={pr.draft} />
-        <MergeStatusBadge status={pr.mergeStatus} />
-        {pr.updatedAt && (
-          <span className="hidden sm:flex items-center gap-1 font-mono text-[9px] text-text-tertiary">
-            <Clock className="size-2.5" strokeWidth={1.75} />
-            {formatRelativeTime(pr.updatedAt)}
-          </span>
-        )}
-        {pr.htmlUrl && (
-          <ExternalLink
-            className="size-3 text-text-disabled group-hover:text-text-tertiary transition-colors duration-100 shrink-0"
-            strokeWidth={1.5}
-          />
-        )}
-      </div>
-    </div>
-  );
-
-  if (pr.htmlUrl) {
-    return (
-      <a href={pr.htmlUrl} target="_blank" rel="noopener noreferrer">
-        {content}
-      </a>
-    );
-  }
-  return content;
-}
-
-function PullRequestsSection({
-  prs,
-  repoMap,
-  loading,
-}: {
-  prs: PullRequest[];
-  repoMap: Map<string, string>;
-  loading: boolean;
-}) {
-  const openPrs = prs.filter((pr) => pr.state === "open" || pr.draft);
-
-  return (
-    <div>
-      <SectionLabel count={loading ? undefined : openPrs.length}>
-        Pull Requests
-      </SectionLabel>
-      {loading ? (
-        <RowSkeleton count={3} />
-      ) : openPrs.length === 0 ? (
-        <EmptySection message="No open pull requests" />
-      ) : (
-        <div
-          className="border border-border overflow-hidden"
-          style={{ borderRadius: "4px" }}
-        >
-          {openPrs.map((pr) => (
-            <PrRow
-              key={pr.id}
-              pr={pr}
-              repoName={repoMap.get(pr.repoId) ?? ""}
-            />
-          ))}
-        </div>
-      )}
-    </div>
-  );
-}
-
-// ── Page ──────────────────────────────────────────────────────────────────────
-
-export default function OverviewPage() {
+export default function ProjectOverviewPage() {
   const params = useParams();
-  const orgId = params?.orgId as string;
-  const projectPublicId = params?.projectId as string;
+  const orgId = params.orgId as string;
+  const projectId = params.projectId as string;
 
-  const [project] = useQuery(
-    queries.projectByPublicId({ publicId: projectPublicId }),
-  );
+  const data = useQuery(api.console.getProjectOverview, {
+    projectPublicId: projectId,
+  });
+  const isLoading = data === undefined;
 
-  const projectId = project?.id ?? "";
+  const [repoOwner, setRepoOwner] = useState("");
+  const [repoName, setRepoName] = useState("");
+  const [defaultBranch, setDefaultBranch] = useState("main");
+  const [prTitle, setPrTitle] = useState("");
+  const [prRepoId, setPrRepoId] = useState("");
+  const [prUrl, setPrUrl] = useState("");
+  const [prNumber, setPrNumber] = useState("");
 
-  const [repos, repoDetails] = useQuery(
-    queries.repositoriesByProjectId({ projectId }),
-  );
-  const [prs, prDetails] = useQuery(
-    queries.pullRequestsByProjectId({ projectId }),
-  );
+  const createRepository = useMutation(api.console.createRepository);
+  const createPullRequest = useMutation(api.console.createPullRequest);
 
-  const reposLoading = repoDetails.type === "unknown";
-  const prsLoading = prDetails.type === "unknown";
-
-  const repoMap = new Map(
-    (repos as Repository[]).map((r) => [r.id, `${r.repoOwner}/${r.repoName}`]),
-  );
+  const project = data?.project;
+  const repositories = data?.repositories ?? [];
+  const pullRequests = data?.pullRequests ?? [];
 
   return (
-    <div className="min-h-screen bg-background">
-      {/* Page header */}
-      <div className="border-b border-border px-8 py-5">
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-[17px] font-semibold text-foreground tracking-tight leading-none">
-              Overview
-            </h1>
-            {project && (
-              <p className="mt-1 font-mono text-[9px] tracking-[0.08em] uppercase text-text-tertiary">
-                {project.id}
-              </p>
+    <div className="min-h-screen bg-background px-8 py-7">
+      <div className="mb-8">
+        <p className="font-mono text-[9px] tracking-[0.08em] uppercase text-text-tertiary mb-2">
+          Project
+        </p>
+        <h1 className="text-[22px] font-semibold tracking-tight text-foreground">
+          {isLoading ? "Loading..." : project?.name ?? "Project not found"}
+        </h1>
+        <p className="mt-2 max-w-2xl text-[13px] leading-relaxed text-muted-foreground">
+          Build the GTM dataset directly in the product. Add repositories and pull
+          requests here, then shape release packets around the work that matters.
+        </p>
+      </div>
+
+      <div className="grid gap-8 lg:grid-cols-[1fr_1fr]">
+        <section>
+          <SectionLabel count={repositories.length}>Repositories</SectionLabel>
+          <div className="border border-border bg-muted/20 p-4 mb-4" style={{ borderRadius: "4px" }}>
+            <div className="grid gap-3 sm:grid-cols-2">
+              <InlineInput
+                placeholder="owner"
+                value={repoOwner}
+                onChange={(e) => setRepoOwner(e.target.value)}
+              />
+              <InlineInput
+                placeholder="repo-name"
+                value={repoName}
+                onChange={(e) => setRepoName(e.target.value)}
+              />
+              <InlineInput
+                placeholder="default branch"
+                value={defaultBranch}
+                onChange={(e) => setDefaultBranch(e.target.value)}
+              />
+            </div>
+            <Button
+              className="mt-3"
+              size="sm"
+              disabled={!repoOwner.trim() || !repoName.trim()}
+              onClick={async () => {
+                await createRepository({
+                  projectPublicId: projectId,
+                  repoOwner,
+                  repoName,
+                  defaultBranch,
+                });
+                setRepoOwner("");
+                setRepoName("");
+                setDefaultBranch("main");
+              }}
+            >
+              <Plus className="size-3.5" />
+              Add Repository
+            </Button>
+          </div>
+
+          <div className="border border-border overflow-hidden" style={{ borderRadius: "4px" }}>
+            {repositories.length === 0 ? (
+              <div className="px-5 py-10 text-center text-[12px] text-text-tertiary">
+                No repositories yet.
+              </div>
+            ) : (
+              repositories.map((repo) => (
+                <div
+                  key={repo.id}
+                  className="flex items-center gap-3 border-b border-border px-5 py-3 last:border-b-0"
+                >
+                  <FolderGit2 className="size-3.5 text-text-tertiary" />
+                  <div className="min-w-0 flex-1">
+                    <p className="font-mono text-[12px] text-foreground">
+                      {repo.repoOwner}/{repo.repoName}
+                    </p>
+                  </div>
+                  <span className="flex items-center gap-1 font-mono text-[9px] text-text-tertiary">
+                    <GitBranch className="size-3" />
+                    {repo.defaultBranch ?? "main"}
+                  </span>
+                </div>
+              ))
             )}
           </div>
-        </div>
-      </div>
+        </section>
 
-      {/* Content */}
-      <div className="px-8 py-6 space-y-8 animate-fade-up">
-        {/* Project metadata */}
-        {project && (
-          <div
-            className="border border-border bg-muted/30 px-5 py-4"
-            style={{ borderRadius: "4px" }}
-          >
-            <div className="flex items-start gap-6">
-              <div className="min-w-0 flex-1">
-                <p className="text-[13px] font-medium text-foreground leading-none mb-1">
-                  {project.name}
-                </p>
-                <div className="flex items-center gap-2.5 mt-1.5">
-                  {project.createdAt && (
-                    <span className="font-mono text-[10px] tracking-[0.04em] text-text-tertiary">
-                      Created {formatDate(project.createdAt)}
-                    </span>
-                  )}
-                </div>
+        <section>
+          <SectionLabel count={pullRequests.length}>Pull Requests</SectionLabel>
+          <div className="border border-border bg-muted/20 p-4 mb-4" style={{ borderRadius: "4px" }}>
+            <div className="grid gap-3">
+              <InlineInput
+                placeholder="PR title"
+                value={prTitle}
+                onChange={(e) => setPrTitle(e.target.value)}
+              />
+              <div className="grid gap-3 sm:grid-cols-3">
+                <select
+                  value={prRepoId}
+                  onChange={(e) => setPrRepoId(e.target.value)}
+                  className="w-full border border-border bg-background px-3 py-2 text-[12px] text-foreground outline-none"
+                  style={{ borderRadius: "4px" }}
+                >
+                  <option value="">No repo link</option>
+                  {repositories.map((repo) => (
+                    <option key={repo.id} value={repo.publicId}>
+                      {repo.repoOwner}/{repo.repoName}
+                    </option>
+                  ))}
+                </select>
+                <InlineInput
+                  placeholder="PR number"
+                  value={prNumber}
+                  onChange={(e) => setPrNumber(e.target.value)}
+                />
+                <InlineInput
+                  placeholder="PR URL"
+                  value={prUrl}
+                  onChange={(e) => setPrUrl(e.target.value)}
+                />
               </div>
             </div>
-          </div>
-        )}
-
-        {/* Quick links */}
-        <div>
-          <SectionLabel>Sections</SectionLabel>
-          <div
-            className="border border-border overflow-hidden"
-            style={{ borderRadius: "4px" }}
-          >
-            <Link
-              href={`/orgs/${orgId}/projects/${projectPublicId}/policies`}
-              className="group flex items-center gap-3 px-5 py-3.5 bg-background border-b border-border last:border-b-0 hover:bg-muted/50 transition-colors duration-100"
+            <Button
+              className="mt-3"
+              size="sm"
+              disabled={!prTitle.trim()}
+              onClick={async () => {
+                await createPullRequest({
+                  projectPublicId: projectId,
+                  repositoryPublicId: prRepoId || undefined,
+                  number: prNumber ? Number(prNumber) : undefined,
+                  title: prTitle,
+                  url: prUrl || undefined,
+                });
+                setPrTitle("");
+                setPrRepoId("");
+                setPrUrl("");
+                setPrNumber("");
+              }}
             >
-              <Shield
-                className="size-4 text-text-tertiary group-hover:text-muted-foreground transition-colors duration-100 shrink-0"
-                strokeWidth={1.5}
-              />
-              <div className="min-w-0 flex-1">
-                <p className="text-[13px] font-medium text-foreground leading-none">
-                  Policies
-                </p>
-                <p className="mt-0.5 text-[11px] text-text-tertiary leading-relaxed">
-                  Release gates, freeze windows, and approval rules for this project
-                </p>
+              <Plus className="size-3.5" />
+              Add Pull Request
+            </Button>
+          </div>
+
+          <div className="border border-border overflow-hidden" style={{ borderRadius: "4px" }}>
+            {pullRequests.length === 0 ? (
+              <div className="px-5 py-10 text-center text-[12px] text-text-tertiary">
+                No pull requests yet.
               </div>
+            ) : (
+              pullRequests.map((pullRequest) => (
+                <div
+                  key={pullRequest.id}
+                  className="flex items-center gap-3 border-b border-border px-5 py-3 last:border-b-0"
+                >
+                  <GitPullRequest className="size-3.5 text-text-tertiary" />
+                  <div className="min-w-0 flex-1">
+                    <p className="text-[13px] text-foreground">{pullRequest.title}</p>
+                    <p className="font-mono text-[10px] text-text-tertiary">
+                      {pullRequest.repositoryPublicId ?? "manual"} · {pullRequest.status}
+                    </p>
+                  </div>
+                  {pullRequest.url ? (
+                    <a
+                      href={pullRequest.url}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="text-text-tertiary hover:text-foreground"
+                    >
+                      <ExternalLink className="size-3.5" />
+                    </a>
+                  ) : null}
+                </div>
+              ))
+            )}
+          </div>
+
+          <div className="mt-5">
+            <Link href={`/orgs/${orgId}/projects/${projectId}/releases`}>
+              <Button size="sm">
+                Open Releases
+              </Button>
             </Link>
           </div>
-        </div>
-
-        {/* Repositories */}
-        <RepositoriesSection repos={repos as Repository[]} loading={reposLoading} />
-
-        {/* Pull Requests */}
-        <PullRequestsSection
-          prs={prs as PullRequest[]}
-          repoMap={repoMap}
-          loading={prsLoading}
-        />
+        </section>
       </div>
     </div>
   );

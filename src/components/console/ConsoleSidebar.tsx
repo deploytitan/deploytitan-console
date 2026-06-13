@@ -1,14 +1,17 @@
 "use client";
 
 import Link from "next/link";
+import { useEffect, useState } from "react";
 import { useParams, usePathname } from "next/navigation";
 import { useAuth } from "@workos-inc/authkit-nextjs/components";
+import { useQuery } from "convex/react";
 import { BrandLogo } from "@/components/ui/BrandLogo";
 import { ConnectionStatus } from "@/components/console/ConnectionStatus";
 import { ThemeToggle } from "@/components/ui/ThemeToggle";
 import { UserAvatar } from "@/components/ui/UserAvatar";
 import { cn } from "@/lib/utils";
 import { signOutAction } from "@/actions/auth";
+import { api } from "@convex/_generated/api";
 import { Menu } from "@base-ui/react/menu";
 import {
   Building2,
@@ -20,8 +23,6 @@ import {
   PackageCheck,
   Settings,
 } from "lucide-react";
-import { queries } from "@deploytitan/zero-schema";
-import { useQuery } from "@rocicorp/zero/react";
 
 type NavItem =
   | {
@@ -138,10 +139,11 @@ function NavLink({
 function ProjectDisplay() {
   const params = useParams();
   const projectPublicId = params?.projectId as string | undefined;
-  const [projectDetails] = useQuery(
-    queries.projectByPublicId({ publicId: projectPublicId }),
+  const data = useQuery(
+    api.console.getProjectOverview,
+    projectPublicId ? { projectPublicId } : "skip",
   );
-  const projectName = projectDetails?.name;
+  const projectName = data?.project?.name;
 
   return (
     <div className="px-3 pb-3">
@@ -203,6 +205,8 @@ function NavGroupList({ navList }: { navList: NavItem[] }) {
 export function ConsoleSidebar() {
   const params = useParams();
   const { user } = useAuth();
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => { setMounted(true); }, []);
 
   const orgId = params?.orgId as string | undefined;
   const projectPublicId = params?.projectId as string | undefined;
@@ -257,7 +261,7 @@ export function ConsoleSidebar() {
           <ConnectionStatus />
           <ThemeToggle />
         </div>
-        {user && (
+        {mounted && user && (
           <Menu.Root>
             <Menu.Trigger
               className={cn(

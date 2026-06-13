@@ -1,30 +1,19 @@
 # DeployTitan Console
 
-Standalone Next.js console for DeployTitan, intended to run on Vercel while the original monorepo continues to own backend services and private packages.
+DeployTitan now ships from this repo as a `Next.js + Convex + WorkOS` app. The
+old GCP, Zero, and Postgres-backed path is retired.
 
-## Companion repositories
+## Architecture
 
-| Repo | Path | Purpose |
-|---|---|---|
-| `deploytitan-monorepo` | `~/projects/deploytitan-monorepo` | Backend API, worker, DB schema, Zero schema, shared packages |
-| `deploytitan-console` | `~/projects/deploytitan-console` | This repo — Next.js frontend |
+- `app/`
+  - App Router UI, auth flows, and console pages
+- `convex/`
+  - Product data model and backend functions
+- `src/lib/console/`
+  - Server-side helpers for WorkOS-to-Convex session sync
 
-The backend monorepo owns:
-- **DB schema** — `packages/db-schema/src/index.ts` (Drizzle ORM tables + Postgres migrations)
-- **Zero schema** — `packages/db-schema/zero-schema.gen.ts` (auto-generated; run `pnpm --filter @deploytitan/db-schema generate`)
-- **Zero queries** — `packages/zero-schema/src/queries.ts`
-- **Zero mutators** — `packages/zero-schema/src/mutators.ts`
-- **API** — `apps/api/src/` (Effect HTTP, BullMQ workers)
-
-When adding a new feature that needs new tables or API endpoints:
-1. Update `packages/db-schema/src/index.ts`
-2. Run `pnpm --filter @deploytitan/db-schema db:generate` (Drizzle migration)
-3. Run `pnpm --filter @deploytitan/db-schema generate` (Zero schema regen)
-4. Run `pnpm --filter @deploytitan/db-schema build` (publish built types)
-5. Update `packages/zero-schema/src/queries.ts` and `mutators.ts`
-6. Bump patch versions in both `db-schema` and `zero-schema` `package.json`
-7. Add API group + handler in `apps/api/src/api/groups/` and `handlers/`
-8. Register in `apps/api/src/api/Api.ts` and `apps/api/src/main.ts`
+For product work, build here first. Do not add new product backend logic to the
+legacy monorepo.
 
 ## Development
 
@@ -33,7 +22,19 @@ pnpm install
 pnpm dev
 ```
 
-The local console runs on `http://localhost:8080` so the backend API can keep its default `http://localhost:3000` port. The app reads browser-safe values from `NEXT_PUBLIC_*` variables. For local backend proxying, set `API_PROXY_ORIGIN` to the DeployTitan API origin; Next will rewrite `/auth/*`, `/orgs/*`, `/github/*`, `/pull-requests/*`, `/billing/*`, and `/onboarding/signup` to that origin.
+The local console runs on `http://localhost:4000`.
+
+To work locally, set:
+
+```bash
+NEXT_PUBLIC_CONVEX_URL=
+CONVEX_URL=
+CONVEX_DEPLOY_KEY=
+WORKOS_API_KEY=
+WORKOS_CLIENT_ID=
+WORKOS_COOKIE_PASSWORD=
+NEXT_PUBLIC_WORKOS_REDIRECT_URI=http://localhost:4000/auth/callback
+```
 
 ## WorkOS Auth
 
@@ -42,9 +43,9 @@ WorkOS AuthKit runs in this console app. Set `WORKOS_API_KEY`, `WORKOS_CLIENT_ID
 For Vercel, configure the console with:
 
 ```bash
-NEXT_PUBLIC_API_URL=
-API_PROXY_ORIGIN=https://api.deploytitan.com
-NEXT_PUBLIC_ZERO_SERVER=https://zero.deploytitan.com
+NEXT_PUBLIC_CONVEX_URL=
+CONVEX_URL=
+CONVEX_DEPLOY_KEY=
 NEXT_PUBLIC_DEV_BYPASS_AUTH=false
 WORKOS_API_KEY=
 WORKOS_CLIENT_ID=
@@ -59,3 +60,9 @@ NEXT_PUBLIC_WORKOS_REDIRECT_URI=https://console.deploytitan.com/auth/callback
 ```
 
 `/login` and `/signup` start the AuthKit flow, `/auth/callback` exchanges the WorkOS code, and `/logout` clears session state.
+
+## Current product posture
+
+- Repository and pull request data can be entered manually inside each project.
+- The GitHub install callback route is currently a placeholder while the new
+  Convex-native integration path is rebuilt.
