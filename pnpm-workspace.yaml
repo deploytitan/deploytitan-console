@@ -5,5 +5,4 @@ ignoredBuiltDependencies:
   - unrs-resolver
 
 onlyBuiltDependencies:
-  - '@rocicorp/zero-sqlite3'
   - esbuild
