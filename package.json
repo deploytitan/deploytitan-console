@@ -2,6 +2,9 @@
   "name": "deploytitan-console",
   "version": "0.1.0",
   "private": true,
+  "bin": {
+    "deploytitan": "./bin/deploytitan.mjs"
+  },
   "scripts": {
     "dev": "next dev -p 4000",
     "build": "next build",
@@ -9,6 +12,8 @@
     "typecheck": "tsc --noEmit",
     "lint": "eslint",
     "test": "vitest run",
+    "test:smoke:mcp": "node scripts/smoke-mcp.mjs",
+    "test:smoke:cli": "node scripts/smoke-cli.mjs",
     "test:e2e": "playwright test",
     "test:e2e:ui": "playwright test --ui",
     "test:e2e:headed": "playwright test --headed"
@@ -19,6 +24,8 @@
     "@fontsource-variable/geist": "^5.2.8",
     "@grafana/faro-web-sdk": "^2.7.0",
     "@grafana/faro-web-tracing": "^2.7.0",
+    "jose": "^6.1.2",
+    "@octokit/webhooks": "^14.2.0",
     "@polar-sh/checkout": "^0.2.1",
     "@tanstack/react-query": "^5.100.1",
     "@workos-inc/authkit-nextjs": "^4.1.0",

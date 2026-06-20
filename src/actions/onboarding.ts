@@ -49,6 +49,7 @@ export async function createOrganizationAction(
         workosOrgId: organization.id,
         name: organization.name,
       },
+      defaultWorkosOrgId: organization.id,
     });
 
     return { success: true, orgId: organization.id };

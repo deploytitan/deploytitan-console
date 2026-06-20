@@ -26,6 +26,17 @@ async function getUserByTokenIdentifier(
   ctx: ConvexCtx,
   tokenIdentifier: string,
 ) {
+  const authIdentity = await ctx.db
+    .query("userAuthIdentities")
+    .withIndex("by_token_identifier", (q) =>
+      q.eq("tokenIdentifier", tokenIdentifier),
+    )
+    .unique();
+
+  if (authIdentity) {
+    return await ctx.db.get(authIdentity.userId);
+  }
+
   return await ctx.db
     .query("users")
     .withIndex("by_token_identifier", (q) =>
@@ -62,6 +73,16 @@ async function getRepositoryByPublicId(ctx: ConvexCtx, publicId: string) {
   return await ctx.db
     .query("repositories")
     .withIndex("by_public_id", (q) => q.eq("publicId", publicId))
+    .unique();
+}
+
+async function getGithubInstallationByInstallationId(
+  ctx: ConvexCtx,
+  installationId: number,
+) {
+  return await ctx.db
+    .query("githubInstallations")
+    .withIndex("by_installation_id", (q) => q.eq("installationId", installationId))
     .unique();
 }
 
@@ -124,6 +145,39 @@ async function requireProjectAccess(ctx: ConvexCtx, projectPublicId: string) {
 
   await requireMembership(ctx, project.orgId);
   return project;
+}
+
+async function getAccessibleProjectsWithOrganizations(ctx: ConvexCtx) {
+  const { viewer } = await requireViewer(ctx);
+  const memberships = await ctx.db
+    .query("memberships")
+    .withIndex("by_user_id", (q) => q.eq("userId", viewer._id))
+    .take(100);
+
+  const organizations = (
+    await Promise.all(
+      memberships.map(async (membership) => await ctx.db.get(membership.organizationId)),
+    )
+  ).filter((organization): organization is NonNullable<typeof organization> => organization !== null);
+
+  const projectsByOrganization = await Promise.all(
+    organizations.map(async (organization) => ({
+      organization,
+      projects: await ctx.db
+        .query("projects")
+        .withIndex("by_org_id", (q) => q.eq("orgId", organization._id))
+        .order("desc")
+        .take(100),
+    })),
+  );
+
+  return projectsByOrganization.flatMap(({ organization, projects }) =>
+    projects.map((project) => ({
+      ...mapProject(project),
+      orgId: organization.workosOrgId,
+      orgName: organization.name,
+    })),
+  );
 }
 
 async function requireReleaseAccess(ctx: ConvexCtx, releasePublicId: string) {
@@ -219,6 +273,10 @@ function mapReleasePacket(releasePacket: Doc<"releasePackets">) {
     outcome: releasePacket.outcome,
     successMetric: releasePacket.successMetric,
     shipPlan: releasePacket.shipPlan,
+    targetEnvironment: releasePacket.targetEnvironment ?? null,
+    approvalSummary: releasePacket.approvalSummary ?? null,
+    riskSummary: releasePacket.riskSummary ?? null,
+    monitorWindowMinutes: releasePacket.monitorWindowMinutes ?? null,
     createdAt: releasePacket.createdAt,
     updatedAt: releasePacket.updatedAt,
   };
@@ -269,6 +327,31 @@ export const syncSession = mutation({
         updatedAt: timestamp,
       });
       user = (await ctx.db.get(userId))!;
+    }
+
+    const existingIdentity = await ctx.db
+      .query("userAuthIdentities")
+      .withIndex("by_token_identifier", (q) =>
+        q.eq("tokenIdentifier", identity.tokenIdentifier),
+      )
+      .unique();
+
+    if (existingIdentity) {
+      await ctx.db.patch(existingIdentity._id, {
+        userId: user._id,
+        issuer: identity.issuer,
+        subject: identity.subject,
+        lastSeenAt: timestamp,
+      });
+    } else {
+      await ctx.db.insert("userAuthIdentities", {
+        userId: user._id,
+        tokenIdentifier: identity.tokenIdentifier,
+        issuer: identity.issuer,
+        subject: identity.subject,
+        createdAt: timestamp,
+        lastSeenAt: timestamp,
+      });
     }
 
     if (!args.organization) {
@@ -381,6 +464,95 @@ export const getOrgDashboard = query({
   },
 });
 
+export const getGithubInstallationSetup = query({
+  args: { installationId: v.number() },
+  handler: async (ctx, args) => {
+    const installation = await getGithubInstallationByInstallationId(
+      ctx,
+      args.installationId,
+    );
+    const accessibleProjects = await getAccessibleProjectsWithOrganizations(ctx);
+
+    if (!installation) {
+      return {
+        installation: null,
+        accessibleProjects,
+        repositories: [],
+      };
+    }
+
+    const installationRepositories = await ctx.db
+      .query("githubInstallationRepositories")
+      .withIndex("by_github_installation_id", (q) =>
+        q.eq("githubInstallationId", installation._id),
+      )
+      .take(500);
+
+    const accessibleProjectIds = new Set(
+      accessibleProjects.map((project) => project.id),
+    );
+    const accessibleProjectMeta = new Map(
+      accessibleProjects.map((project) => [project.id, project]),
+    );
+
+    const repositories = await Promise.all(
+      installationRepositories.map(async (repository) => {
+        const existing = await ctx.db
+          .query("repositories")
+          .withIndex("by_repo_owner_and_name", (q) =>
+            q.eq("repoOwner", repository.repoOwner).eq("repoName", repository.repoName),
+          )
+          .first();
+
+        if (!existing) {
+          return {
+            repoOwner: repository.repoOwner,
+            repoName: repository.repoName,
+            isPrivate: repository.isPrivate,
+            existingConnection: null,
+          };
+        }
+
+        const project = await ctx.db.get(existing.projectId);
+        const visibleProject = accessibleProjectMeta.get(existing.projectId);
+
+        return {
+          repoOwner: repository.repoOwner,
+          repoName: repository.repoName,
+          isPrivate: repository.isPrivate,
+          existingConnection: {
+            repositoryPublicId: existing.publicId,
+            installationStatus: existing.installationStatus ?? null,
+            visibility: accessibleProjectIds.has(existing.projectId)
+              ? "accessible"
+              : "restricted",
+            projectPublicId: visibleProject?.publicId ?? null,
+            projectName:
+              visibleProject?.name ?? (project ? "Another project" : "Unknown project"),
+            orgId: visibleProject?.orgId ?? null,
+            orgName: visibleProject?.orgName ?? null,
+          },
+        };
+      }),
+    );
+
+    return {
+      installation: {
+        installationId: installation.installationId,
+        accountLogin: installation.accountLogin,
+        status: installation.status,
+        selectedProjectPublicId: installation.selectedProjectId
+          ? (await ctx.db.get(installation.selectedProjectId))?.publicId ?? null
+          : null,
+        appliedAt: installation.appliedAt ?? null,
+        updatedAt: installation.updatedAt,
+      },
+      accessibleProjects,
+      repositories,
+    };
+  },
+});
+
 export const createProject = mutation({
   args: {
     workosOrgId: v.string(),
@@ -405,6 +577,109 @@ export const createProject = mutation({
     });
 
     return mapProject((await ctx.db.get(projectId))!);
+  },
+});
+
+export const applyGithubInstallation = mutation({
+  args: {
+    installationId: v.number(),
+    projectPublicId: v.string(),
+  },
+  handler: async (ctx, args) => {
+    const project = await requireProjectAccess(ctx, args.projectPublicId);
+    const installation = await getGithubInstallationByInstallationId(
+      ctx,
+      args.installationId,
+    );
+
+    if (!installation) {
+      throw new Error("Installation not found. Wait for GitHub to finish sending the setup webhook and try again.");
+    }
+
+    const installationRepositories = await ctx.db
+      .query("githubInstallationRepositories")
+      .withIndex("by_github_installation_id", (q) =>
+        q.eq("githubInstallationId", installation._id),
+      )
+      .take(500);
+
+    if (installationRepositories.length === 0) {
+      throw new Error("No repositories were received for this installation.");
+    }
+
+    const conflicts: string[] = [];
+    const timestamp = now();
+    let insertedCount = 0;
+    let updatedCount = 0;
+
+    for (const installationRepository of installationRepositories) {
+      const existing = await ctx.db
+        .query("repositories")
+        .withIndex("by_repo_owner_and_name", (q) =>
+          q
+            .eq("repoOwner", installationRepository.repoOwner)
+            .eq("repoName", installationRepository.repoName),
+        )
+        .first();
+
+      if (existing && existing.projectId !== project._id) {
+        conflicts.push(
+          `${installationRepository.repoOwner}/${installationRepository.repoName}`,
+        );
+      }
+    }
+
+    if (conflicts.length > 0) {
+      throw new Error(
+        `These repositories are already linked to another project: ${conflicts.join(", ")}.`,
+      );
+    }
+
+    for (const installationRepository of installationRepositories) {
+      const existing = await ctx.db
+        .query("repositories")
+        .withIndex("by_repo_owner_and_name", (q) =>
+          q
+            .eq("repoOwner", installationRepository.repoOwner)
+            .eq("repoName", installationRepository.repoName),
+        )
+        .first();
+
+      if (existing) {
+        await ctx.db.patch(existing._id, {
+          repoVendor: "github",
+          installationStatus: "installed",
+          updatedAt: timestamp,
+        });
+        updatedCount += 1;
+      } else {
+        await ctx.db.insert("repositories", {
+          projectId: project._id,
+          publicId: createPublicId("repo"),
+          repoVendor: "github",
+          repoOwner: installationRepository.repoOwner,
+          repoName: installationRepository.repoName,
+          installationStatus: "installed",
+          createdAt: timestamp,
+          updatedAt: timestamp,
+        });
+        insertedCount += 1;
+      }
+    }
+
+    await ctx.db.patch(installation._id, {
+      status: "applied",
+      selectedProjectId: project._id,
+      updatedAt: timestamp,
+      appliedAt: timestamp,
+    });
+
+    return {
+      projectPublicId: project.publicId,
+      insertedCount,
+      updatedCount,
+      repositoryCount: installationRepositories.length,
+    };
   },
 });
 
@@ -739,6 +1014,15 @@ export const updateRelease = mutation({
     status: v.optional(
       v.union(
         v.literal("draft"),
+        v.literal("awaiting_approvals"),
+        v.literal("approved"),
+        v.literal("merging"),
+        v.literal("merged"),
+        v.literal("monitoring"),
+        v.literal("completed"),
+        v.literal("alerted"),
+        v.literal("failed"),
+        v.literal("cancelled"),
         v.literal("ready"),
         v.literal("in_progress"),
         v.literal("shipped"),
@@ -748,6 +1032,10 @@ export const updateRelease = mutation({
     outcome: v.optional(v.string()),
     successMetric: v.optional(v.string()),
     shipPlan: v.optional(v.string()),
+    targetEnvironment: v.optional(v.string()),
+    approvalSummary: v.optional(v.string()),
+    riskSummary: v.optional(v.string()),
+    monitorWindowMinutes: v.optional(v.number()),
   },
   handler: async (ctx, args) => {
     const { release } = await requireReleaseAccess(ctx, args.releasePublicId);
@@ -759,6 +1047,11 @@ export const updateRelease = mutation({
       outcome: args.outcome ?? release.outcome,
       successMetric: args.successMetric ?? release.successMetric,
       shipPlan: args.shipPlan ?? release.shipPlan,
+      targetEnvironment: args.targetEnvironment ?? release.targetEnvironment,
+      approvalSummary: args.approvalSummary ?? release.approvalSummary,
+      riskSummary: args.riskSummary ?? release.riskSummary,
+      monitorWindowMinutes:
+        args.monitorWindowMinutes ?? release.monitorWindowMinutes,
       updatedAt: now(),
     });
 
@@ -1076,5 +1369,130 @@ export const removeReleaseDependency = mutation({
     }
     await ctx.db.delete(dependency._id);
     return null;
+  },
+});
+
+export const getOrgPullRequests = query({
+  args: { workosOrgId: v.string() },
+  handler: async (ctx, args) => {
+    const organization = await getOrganizationByWorkosOrgId(ctx, args.workosOrgId);
+    if (!organization) {
+      return { org: null, projects: [], pullRequests: [] };
+    }
+
+    await requireMembership(ctx, organization._id);
+
+    const projects = await ctx.db
+      .query("projects")
+      .withIndex("by_org_id", (q) => q.eq("orgId", organization._id))
+      .order("desc")
+      .take(50);
+
+    const allPullRequests: Array<{
+      id: Id<"pullRequests">;
+      publicId: string;
+      number: number | null;
+      title: string;
+      status: string;
+      url: string | null;
+      authorName: string | null;
+      baseBranch: string | null;
+      headBranch: string | null;
+      mergedAt: number | null;
+      createdAt: number;
+      updatedAt: number;
+      repoOwner: string | null;
+      repoName: string | null;
+      repositoryPublicId: string | null;
+      projectPublicId: string;
+      projectName: string;
+    }> = [];
+
+    for (const project of projects) {
+      const prs = await ctx.db
+        .query("pullRequests")
+        .withIndex("by_project_id", (q) => q.eq("projectId", project._id))
+        .order("desc")
+        .take(200);
+
+      for (const pr of prs) {
+        const repo = pr.repositoryId ? await ctx.db.get(pr.repositoryId) : null;
+        allPullRequests.push({
+          id: pr._id,
+          publicId: pr.publicId,
+          number: pr.number ?? null,
+          title: pr.title,
+          status: pr.status,
+          url: pr.url ?? null,
+          authorName: pr.authorName ?? null,
+          baseBranch: pr.baseBranch ?? null,
+          headBranch: pr.headBranch ?? null,
+          mergedAt: pr.mergedAt ?? null,
+          createdAt: pr.createdAt,
+          updatedAt: pr.updatedAt,
+          repoOwner: repo?.repoOwner ?? null,
+          repoName: repo?.repoName ?? null,
+          repositoryPublicId: repo?.publicId ?? null,
+          projectPublicId: project.publicId,
+          projectName: project.name,
+        });
+      }
+    }
+
+    allPullRequests.sort((a, b) => b.updatedAt - a.updatedAt);
+
+    return {
+      org: mapOrganization(organization),
+      projects: projects.map(mapProject),
+      pullRequests: allPullRequests,
+    };
+  },
+});
+
+export const createReleaseWithPullRequests = mutation({
+  args: {
+    projectPublicId: v.string(),
+    name: v.string(),
+    pullRequestPublicIds: v.array(v.string()),
+  },
+  handler: async (ctx, args) => {
+    const project = await requireProjectAccess(ctx, args.projectPublicId);
+    const timestamp = now();
+
+    const releasePacketId = await ctx.db.insert("releasePackets", {
+      projectId: project._id,
+      publicId: createPublicId("rel"),
+      name: args.name,
+      description: "",
+      status: "draft",
+      outcome: "",
+      successMetric: "",
+      shipPlan: "",
+      createdAt: timestamp,
+      updatedAt: timestamp,
+    });
+
+    for (const prPublicId of args.pullRequestPublicIds) {
+      const pr = await getPullRequestByPublicId(ctx, prPublicId);
+      if (!pr || pr.projectId !== project._id) continue;
+
+      const existing = await ctx.db
+        .query("releasePacketPullRequests")
+        .withIndex("by_release_packet_id_and_pull_request_id", (q) =>
+          q.eq("releasePacketId", releasePacketId).eq("pullRequestId", pr._id),
+        )
+        .unique();
+
+      if (!existing) {
+        await ctx.db.insert("releasePacketPullRequests", {
+          releasePacketId,
+          pullRequestId: pr._id,
+          createdAt: timestamp,
+        });
+      }
+    }
+
+    const release = await ctx.db.get(releasePacketId);
+    return mapReleasePacket(release!);
   },
 });

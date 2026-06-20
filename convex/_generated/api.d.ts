@@ -8,7 +8,14 @@
  * @module
  */
 
+import type * as actors from "../actors.js";
 import type * as console from "../console.js";
+import type * as crons from "../crons.js";
+import type * as github from "../github.js";
+import type * as githubWebhook from "../githubWebhook.js";
+import type * as http from "../http.js";
+import type * as platform from "../platform.js";
+import type * as releaseControl from "../releaseControl.js";
 
 import type {
   ApiFromModules,
@@ -17,7 +24,14 @@ import type {
 } from "convex/server";
 
 declare const fullApi: ApiFromModules<{
+  actors: typeof actors;
   console: typeof console;
+  crons: typeof crons;
+  github: typeof github;
+  githubWebhook: typeof githubWebhook;
+  http: typeof http;
+  platform: typeof platform;
+  releaseControl: typeof releaseControl;
 }>;
 
 /**

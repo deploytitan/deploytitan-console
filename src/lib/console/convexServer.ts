@@ -1,5 +1,6 @@
 import { ConvexHttpClient } from "convex/browser";
 import { api } from "@convex/_generated/api";
+import type { FunctionReference } from "convex/server";
 
 function getConvexUrl(): string {
   const url =
@@ -23,7 +24,7 @@ export async function convexSyncSession(
   args: {
     user: {
       workosUserId: string;
-      email: string;
+      email: string | null;
       firstName: string | null;
       lastName: string | null;
     };
@@ -33,8 +34,41 @@ export async function convexSyncSession(
           name: string;
         }
       | null;
+    defaultWorkosOrgId?: string | null;
   },
 ) {
-  return createAuthedClient(accessToken).mutation(api.console.syncSession, args);
+  return createAuthedClient(accessToken).mutation(api.actors.bootstrapActorContext, {
+    ...args,
+    defaultWorkosOrgId: args.defaultWorkosOrgId ?? args.organization?.workosOrgId ?? null,
+  });
 }
 
+export async function convexQuery<
+  TRef extends FunctionReference<"query", "public", any, any>,
+>(
+  accessToken: string,
+  ref: TRef,
+  args: TRef["_args"],
+) {
+  return createAuthedClient(accessToken).query(ref, args);
+}
+
+export async function convexMutation<
+  TRef extends FunctionReference<"mutation", "public", any, any>,
+>(
+  accessToken: string,
+  ref: TRef,
+  args: TRef["_args"],
+) {
+  return createAuthedClient(accessToken).mutation(ref, args);
+}
+
+export async function convexAction<
+  TRef extends FunctionReference<"action", "public", any, any>,
+>(
+  accessToken: string,
+  ref: TRef,
+  args: TRef["_args"],
+) {
+  return createAuthedClient(accessToken).action(ref, args);
+}

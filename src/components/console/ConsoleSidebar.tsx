@@ -17,6 +17,7 @@ import {
   Building2,
   ChevronLeft,
   ChevronUp,
+  GitPullRequest,
   LayoutGrid,
   LogOut,
   type LucideIcon,
@@ -73,6 +74,12 @@ const generateOrgNav = (orgId: string): NavItem[] => [
     href: `/orgs/${orgId}`,
     icon: Building2,
     exact: true,
+  },
+  {
+    type: "item",
+    label: "Pull Requests",
+    href: `/orgs/${orgId}/pull-requests`,
+    icon: GitPullRequest,
   },
   {
     type: "item",
@@ -234,24 +241,25 @@ export function ConsoleSidebar() {
         <BrandLogo className="w-28" />
       </div>
 
-      {/* Project display */}
-      {projectPublicId && (
-        <div className="shrink-0 pt-3 border-b border-sidebar-border">
-          <ProjectDisplay />
-        </div>
-      )}
-
       {/* Nav — scrollable */}
-      <nav className="flex-1 overflow-y-auto py-4 px-3 space-y-2">
+      <nav className="flex-1 overflow-y-auto px-3 space-y-4">
         {projectPublicId && (
           <Link
             href={`/orgs/${orgId}`}
-            className="flex items-center gap-1.5 px-3 py-2 mb-4 text-[12px] text-sidebar-foreground hover:text-sidebar-foreground transition-colors duration-100 rounded-lg hover:bg-sidebar-accent/70"
+            className="flex items-center gap-1.5 px-3 py-2 mt-4 text-[12px] text-sidebar-foreground hover:text-sidebar-foreground transition-colors duration-100 rounded-lg hover:bg-sidebar-accent/70"
           >
             <ChevronLeft className="size-3.5 shrink-0" strokeWidth={1.75} />
-            Organization
+            Dashboard
           </Link>
         )}
+
+        {/* Project display */}
+        {projectPublicId && (
+          <div className="shrink-0 border-b border-sidebar-border ">
+            <ProjectDisplay />
+          </div>
+        )}
+
         <NavGroupList navList={navList} />
       </nav>
 
