@@ -9,6 +9,9 @@
  */
 
 import type * as console from "../console.js";
+import type * as github from "../github.js";
+import type * as githubWebhook from "../githubWebhook.js";
+import type * as http from "../http.js";
 
 import type {
   ApiFromModules,
@@ -18,6 +21,9 @@ import type {
 
 declare const fullApi: ApiFromModules<{
   console: typeof console;
+  github: typeof github;
+  githubWebhook: typeof githubWebhook;
+  http: typeof http;
 }>;
 
 /**

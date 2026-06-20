@@ -65,6 +65,16 @@ async function getRepositoryByPublicId(ctx: ConvexCtx, publicId: string) {
     .unique();
 }
 
+async function getGithubInstallationByInstallationId(
+  ctx: ConvexCtx,
+  installationId: number,
+) {
+  return await ctx.db
+    .query("githubInstallations")
+    .withIndex("by_installation_id", (q) => q.eq("installationId", installationId))
+    .unique();
+}
+
 async function getPullRequestByPublicId(ctx: ConvexCtx, publicId: string) {
   return await ctx.db
     .query("pullRequests")
@@ -124,6 +134,39 @@ async function requireProjectAccess(ctx: ConvexCtx, projectPublicId: string) {
 
   await requireMembership(ctx, project.orgId);
   return project;
+}
+
+async function getAccessibleProjectsWithOrganizations(ctx: ConvexCtx) {
+  const { viewer } = await requireViewer(ctx);
+  const memberships = await ctx.db
+    .query("memberships")
+    .withIndex("by_user_id", (q) => q.eq("userId", viewer._id))
+    .take(100);
+
+  const organizations = (
+    await Promise.all(
+      memberships.map(async (membership) => await ctx.db.get(membership.organizationId)),
+    )
+  ).filter((organization): organization is NonNullable<typeof organization> => organization !== null);
+
+  const projectsByOrganization = await Promise.all(
+    organizations.map(async (organization) => ({
+      organization,
+      projects: await ctx.db
+        .query("projects")
+        .withIndex("by_org_id", (q) => q.eq("orgId", organization._id))
+        .order("desc")
+        .take(100),
+    })),
+  );
+
+  return projectsByOrganization.flatMap(({ organization, projects }) =>
+    projects.map((project) => ({
+      ...mapProject(project),
+      orgId: organization.workosOrgId,
+      orgName: organization.name,
+    })),
+  );
 }
 
 async function requireReleaseAccess(ctx: ConvexCtx, releasePublicId: string) {
@@ -381,6 +424,95 @@ export const getOrgDashboard = query({
   },
 });
 
+export const getGithubInstallationSetup = query({
+  args: { installationId: v.number() },
+  handler: async (ctx, args) => {
+    const installation = await getGithubInstallationByInstallationId(
+      ctx,
+      args.installationId,
+    );
+    const accessibleProjects = await getAccessibleProjectsWithOrganizations(ctx);
+
+    if (!installation) {
+      return {
+        installation: null,
+        accessibleProjects,
+        repositories: [],
+      };
+    }
+
+    const installationRepositories = await ctx.db
+      .query("githubInstallationRepositories")
+      .withIndex("by_github_installation_id", (q) =>
+        q.eq("githubInstallationId", installation._id),
+      )
+      .take(500);
+
+    const accessibleProjectIds = new Set(
+      accessibleProjects.map((project) => project.id),
+    );
+    const accessibleProjectMeta = new Map(
+      accessibleProjects.map((project) => [project.id, project]),
+    );
+
+    const repositories = await Promise.all(
+      installationRepositories.map(async (repository) => {
+        const existing = await ctx.db
+          .query("repositories")
+          .withIndex("by_repo_owner_and_name", (q) =>
+            q.eq("repoOwner", repository.repoOwner).eq("repoName", repository.repoName),
+          )
+          .first();
+
+        if (!existing) {
+          return {
+            repoOwner: repository.repoOwner,
+            repoName: repository.repoName,
+            isPrivate: repository.isPrivate,
+            existingConnection: null,
+          };
+        }
+
+        const project = await ctx.db.get(existing.projectId);
+        const visibleProject = accessibleProjectMeta.get(existing.projectId);
+
+        return {
+          repoOwner: repository.repoOwner,
+          repoName: repository.repoName,
+          isPrivate: repository.isPrivate,
+          existingConnection: {
+            repositoryPublicId: existing.publicId,
+            installationStatus: existing.installationStatus ?? null,
+            visibility: accessibleProjectIds.has(existing.projectId)
+              ? "accessible"
+              : "restricted",
+            projectPublicId: visibleProject?.publicId ?? null,
+            projectName:
+              visibleProject?.name ?? (project ? "Another project" : "Unknown project"),
+            orgId: visibleProject?.orgId ?? null,
+            orgName: visibleProject?.orgName ?? null,
+          },
+        };
+      }),
+    );
+
+    return {
+      installation: {
+        installationId: installation.installationId,
+        accountLogin: installation.accountLogin,
+        status: installation.status,
+        selectedProjectPublicId: installation.selectedProjectId
+          ? (await ctx.db.get(installation.selectedProjectId))?.publicId ?? null
+          : null,
+        appliedAt: installation.appliedAt ?? null,
+        updatedAt: installation.updatedAt,
+      },
+      accessibleProjects,
+      repositories,
+    };
+  },
+});
+
 export const createProject = mutation({
   args: {
     workosOrgId: v.string(),
@@ -405,6 +537,109 @@ export const createProject = mutation({
     });
 
     return mapProject((await ctx.db.get(projectId))!);
+  },
+});
+
+export const applyGithubInstallation = mutation({
+  args: {
+    installationId: v.number(),
+    projectPublicId: v.string(),
+  },
+  handler: async (ctx, args) => {
+    const project = await requireProjectAccess(ctx, args.projectPublicId);
+    const installation = await getGithubInstallationByInstallationId(
+      ctx,
+      args.installationId,
+    );
+
+    if (!installation) {
+      throw new Error("Installation not found. Wait for GitHub to finish sending the setup webhook and try again.");
+    }
+
+    const installationRepositories = await ctx.db
+      .query("githubInstallationRepositories")
+      .withIndex("by_github_installation_id", (q) =>
+        q.eq("githubInstallationId", installation._id),
+      )
+      .take(500);
+
+    if (installationRepositories.length === 0) {
+      throw new Error("No repositories were received for this installation.");
+    }
+
+    const conflicts: string[] = [];
+    const timestamp = now();
+    let insertedCount = 0;
+    let updatedCount = 0;
+
+    for (const installationRepository of installationRepositories) {
+      const existing = await ctx.db
+        .query("repositories")
+        .withIndex("by_repo_owner_and_name", (q) =>
+          q
+            .eq("repoOwner", installationRepository.repoOwner)
+            .eq("repoName", installationRepository.repoName),
+        )
+        .first();
+
+      if (existing && existing.projectId !== project._id) {
+        conflicts.push(
+          `${installationRepository.repoOwner}/${installationRepository.repoName}`,
+        );
+      }
+    }
+
+    if (conflicts.length > 0) {
+      throw new Error(
+        `These repositories are already linked to another project: ${conflicts.join(", ")}.`,
+      );
+    }
+
+    for (const installationRepository of installationRepositories) {
+      const existing = await ctx.db
+        .query("repositories")
+        .withIndex("by_repo_owner_and_name", (q) =>
+          q
+            .eq("repoOwner", installationRepository.repoOwner)
+            .eq("repoName", installationRepository.repoName),
+        )
+        .first();
+
+      if (existing) {
+        await ctx.db.patch(existing._id, {
+          repoVendor: "github",
+          installationStatus: "installed",
+          updatedAt: timestamp,
+        });
+        updatedCount += 1;
+      } else {
+        await ctx.db.insert("repositories", {
+          projectId: project._id,
+          publicId: createPublicId("repo"),
+          repoVendor: "github",
+          repoOwner: installationRepository.repoOwner,
+          repoName: installationRepository.repoName,
+          installationStatus: "installed",
+          createdAt: timestamp,
+          updatedAt: timestamp,
+        });
+        insertedCount += 1;
+      }
+    }
+
+    await ctx.db.patch(installation._id, {
+      status: "applied",
+      selectedProjectId: project._id,
+      updatedAt: timestamp,
+      appliedAt: timestamp,
+    });
+
+    return {
+      projectPublicId: project.publicId,
+      insertedCount,
+      updatedCount,
+      repositoryCount: installationRepositories.length,
+    };
   },
 });
 

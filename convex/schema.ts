@@ -55,7 +55,8 @@ export default defineSchema({
     updatedAt: v.number(),
   })
     .index("by_project_id", ["projectId"])
-    .index("by_public_id", ["publicId"]),
+    .index("by_public_id", ["publicId"])
+    .index("by_repo_owner_and_name", ["repoOwner", "repoName"]),
 
   pullRequests: defineTable({
     projectId: v.id("projects"),
@@ -74,6 +75,7 @@ export default defineSchema({
   })
     .index("by_project_id", ["projectId"])
     .index("by_repository_id", ["repositoryId"])
+    .index("by_repository_id_and_number", ["repositoryId", "number"])
     .index("by_public_id", ["publicId"]),
 
   releasePackets: defineTable({
@@ -141,4 +143,25 @@ export default defineSchema({
     blockedPullRequestId: v.id("pullRequests"),
     createdAt: v.number(),
   }).index("by_release_packet_id", ["releasePacketId"]),
+
+  githubInstallations: defineTable({
+    installationId: v.number(),
+    accountLogin: v.string(),
+    status: v.string(),
+    selectedProjectId: v.optional(v.id("projects")),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+    appliedAt: v.optional(v.number()),
+  }).index("by_installation_id", ["installationId"]),
+
+  githubInstallationRepositories: defineTable({
+    githubInstallationId: v.id("githubInstallations"),
+    repoOwner: v.string(),
+    repoName: v.string(),
+    isPrivate: v.boolean(),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  })
+    .index("by_github_installation_id", ["githubInstallationId"])
+    .index("by_repo_owner_and_name", ["repoOwner", "repoName"]),
 });
