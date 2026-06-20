@@ -48,6 +48,7 @@ export async function syncAuthenticatedSessionToConvex(): Promise<{
           name: organization.name,
         }
       : null,
+    defaultWorkosOrgId: organizationId ?? null,
   });
 
   return { organizationId: organizationId ?? null };

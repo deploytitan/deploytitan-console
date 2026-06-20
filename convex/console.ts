@@ -26,6 +26,17 @@ async function getUserByTokenIdentifier(
   ctx: ConvexCtx,
   tokenIdentifier: string,
 ) {
+  const authIdentity = await ctx.db
+    .query("userAuthIdentities")
+    .withIndex("by_token_identifier", (q) =>
+      q.eq("tokenIdentifier", tokenIdentifier),
+    )
+    .unique();
+
+  if (authIdentity) {
+    return await ctx.db.get(authIdentity.userId);
+  }
+
   return await ctx.db
     .query("users")
     .withIndex("by_token_identifier", (q) =>
@@ -262,6 +273,10 @@ function mapReleasePacket(releasePacket: Doc<"releasePackets">) {
     outcome: releasePacket.outcome,
     successMetric: releasePacket.successMetric,
     shipPlan: releasePacket.shipPlan,
+    targetEnvironment: releasePacket.targetEnvironment ?? null,
+    approvalSummary: releasePacket.approvalSummary ?? null,
+    riskSummary: releasePacket.riskSummary ?? null,
+    monitorWindowMinutes: releasePacket.monitorWindowMinutes ?? null,
     createdAt: releasePacket.createdAt,
     updatedAt: releasePacket.updatedAt,
   };
@@ -312,6 +327,31 @@ export const syncSession = mutation({
         updatedAt: timestamp,
       });
       user = (await ctx.db.get(userId))!;
+    }
+
+    const existingIdentity = await ctx.db
+      .query("userAuthIdentities")
+      .withIndex("by_token_identifier", (q) =>
+        q.eq("tokenIdentifier", identity.tokenIdentifier),
+      )
+      .unique();
+
+    if (existingIdentity) {
+      await ctx.db.patch(existingIdentity._id, {
+        userId: user._id,
+        issuer: identity.issuer,
+        subject: identity.subject,
+        lastSeenAt: timestamp,
+      });
+    } else {
+      await ctx.db.insert("userAuthIdentities", {
+        userId: user._id,
+        tokenIdentifier: identity.tokenIdentifier,
+        issuer: identity.issuer,
+        subject: identity.subject,
+        createdAt: timestamp,
+        lastSeenAt: timestamp,
+      });
     }
 
     if (!args.organization) {
@@ -974,6 +1014,15 @@ export const updateRelease = mutation({
     status: v.optional(
       v.union(
         v.literal("draft"),
+        v.literal("awaiting_approvals"),
+        v.literal("approved"),
+        v.literal("merging"),
+        v.literal("merged"),
+        v.literal("monitoring"),
+        v.literal("completed"),
+        v.literal("alerted"),
+        v.literal("failed"),
+        v.literal("cancelled"),
         v.literal("ready"),
         v.literal("in_progress"),
         v.literal("shipped"),
@@ -983,6 +1032,10 @@ export const updateRelease = mutation({
     outcome: v.optional(v.string()),
     successMetric: v.optional(v.string()),
     shipPlan: v.optional(v.string()),
+    targetEnvironment: v.optional(v.string()),
+    approvalSummary: v.optional(v.string()),
+    riskSummary: v.optional(v.string()),
+    monitorWindowMinutes: v.optional(v.number()),
   },
   handler: async (ctx, args) => {
     const { release } = await requireReleaseAccess(ctx, args.releasePublicId);
@@ -994,6 +1047,11 @@ export const updateRelease = mutation({
       outcome: args.outcome ?? release.outcome,
       successMetric: args.successMetric ?? release.successMetric,
       shipPlan: args.shipPlan ?? release.shipPlan,
+      targetEnvironment: args.targetEnvironment ?? release.targetEnvironment,
+      approvalSummary: args.approvalSummary ?? release.approvalSummary,
+      riskSummary: args.riskSummary ?? release.riskSummary,
+      monitorWindowMinutes:
+        args.monitorWindowMinutes ?? release.monitorWindowMinutes,
       updatedAt: now(),
     });
 

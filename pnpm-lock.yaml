@@ -56,6 +56,9 @@ importers:
       convex:
         specifier: ^1.41.0
         version: 1.41.0(react@19.2.7)
+      jose:
+        specifier: ^6.1.2
+        version: 6.2.3
       lucide-react:
         specifier: ^1.14.0
         version: 1.17.0(react@19.2.7)
