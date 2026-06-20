@@ -1313,3 +1313,128 @@ export const removeReleaseDependency = mutation({
     return null;
   },
 });
+
+export const getOrgPullRequests = query({
+  args: { workosOrgId: v.string() },
+  handler: async (ctx, args) => {
+    const organization = await getOrganizationByWorkosOrgId(ctx, args.workosOrgId);
+    if (!organization) {
+      return { org: null, projects: [], pullRequests: [] };
+    }
+
+    await requireMembership(ctx, organization._id);
+
+    const projects = await ctx.db
+      .query("projects")
+      .withIndex("by_org_id", (q) => q.eq("orgId", organization._id))
+      .order("desc")
+      .take(50);
+
+    const allPullRequests: Array<{
+      id: Id<"pullRequests">;
+      publicId: string;
+      number: number | null;
+      title: string;
+      status: string;
+      url: string | null;
+      authorName: string | null;
+      baseBranch: string | null;
+      headBranch: string | null;
+      mergedAt: number | null;
+      createdAt: number;
+      updatedAt: number;
+      repoOwner: string | null;
+      repoName: string | null;
+      repositoryPublicId: string | null;
+      projectPublicId: string;
+      projectName: string;
+    }> = [];
+
+    for (const project of projects) {
+      const prs = await ctx.db
+        .query("pullRequests")
+        .withIndex("by_project_id", (q) => q.eq("projectId", project._id))
+        .order("desc")
+        .take(200);
+
+      for (const pr of prs) {
+        const repo = pr.repositoryId ? await ctx.db.get(pr.repositoryId) : null;
+        allPullRequests.push({
+          id: pr._id,
+          publicId: pr.publicId,
+          number: pr.number ?? null,
+          title: pr.title,
+          status: pr.status,
+          url: pr.url ?? null,
+          authorName: pr.authorName ?? null,
+          baseBranch: pr.baseBranch ?? null,
+          headBranch: pr.headBranch ?? null,
+          mergedAt: pr.mergedAt ?? null,
+          createdAt: pr.createdAt,
+          updatedAt: pr.updatedAt,
+          repoOwner: repo?.repoOwner ?? null,
+          repoName: repo?.repoName ?? null,
+          repositoryPublicId: repo?.publicId ?? null,
+          projectPublicId: project.publicId,
+          projectName: project.name,
+        });
+      }
+    }
+
+    allPullRequests.sort((a, b) => b.updatedAt - a.updatedAt);
+
+    return {
+      org: mapOrganization(organization),
+      projects: projects.map(mapProject),
+      pullRequests: allPullRequests,
+    };
+  },
+});
+
+export const createReleaseWithPullRequests = mutation({
+  args: {
+    projectPublicId: v.string(),
+    name: v.string(),
+    pullRequestPublicIds: v.array(v.string()),
+  },
+  handler: async (ctx, args) => {
+    const project = await requireProjectAccess(ctx, args.projectPublicId);
+    const timestamp = now();
+
+    const releasePacketId = await ctx.db.insert("releasePackets", {
+      projectId: project._id,
+      publicId: createPublicId("rel"),
+      name: args.name,
+      description: "",
+      status: "draft",
+      outcome: "",
+      successMetric: "",
+      shipPlan: "",
+      createdAt: timestamp,
+      updatedAt: timestamp,
+    });
+
+    for (const prPublicId of args.pullRequestPublicIds) {
+      const pr = await getPullRequestByPublicId(ctx, prPublicId);
+      if (!pr || pr.projectId !== project._id) continue;
+
+      const existing = await ctx.db
+        .query("releasePacketPullRequests")
+        .withIndex("by_release_packet_id_and_pull_request_id", (q) =>
+          q.eq("releasePacketId", releasePacketId).eq("pullRequestId", pr._id),
+        )
+        .unique();
+
+      if (!existing) {
+        await ctx.db.insert("releasePacketPullRequests", {
+          releasePacketId,
+          pullRequestId: pr._id,
+          createdAt: timestamp,
+        });
+      }
+    }
+
+    const release = await ctx.db.get(releasePacketId);
+    return mapReleasePacket(release!);
+  },
+});

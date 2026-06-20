@@ -3,8 +3,8 @@
   "configurations": [
     {
       "name": "Next.js dev",
-      "runtimeExecutable": "pnpm",
-      "runtimeArgs": ["dev"],
+      "runtimeExecutable": "/Users/justinekizhak/.nvm/versions/node/v20.18.0/bin/node",
+      "runtimeArgs": ["/Users/justinekizhak/projects/deploytitan-console/node_modules/next/dist/bin/next", "dev", "-p", "4000"],
       "port": 4000,
       "autoPort": false
     }

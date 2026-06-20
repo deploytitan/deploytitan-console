@@ -17,6 +17,7 @@ import {
   Building2,
   ChevronLeft,
   ChevronUp,
+  GitPullRequest,
   LayoutGrid,
   LogOut,
   type LucideIcon,
@@ -73,6 +74,12 @@ const generateOrgNav = (orgId: string): NavItem[] => [
     href: `/orgs/${orgId}`,
     icon: Building2,
     exact: true,
+  },
+  {
+    type: "item",
+    label: "Pull Requests",
+    href: `/orgs/${orgId}/pull-requests`,
+    icon: GitPullRequest,
   },
   {
     type: "item",
