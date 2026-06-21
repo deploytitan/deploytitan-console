@@ -7,6 +7,7 @@ const baseUrl = (
 ).replace(/\/+$/, "");
 
 const bearerToken = process.env.DEPLOYTITAN_BEARER_TOKEN || null;
+const standaloneExternalAuthId = "smoke_external_auth_id";
 
 function logStep(message) {
   console.log(`\n[smoke] ${message}`);
@@ -34,6 +35,10 @@ async function fetchJson(path, init = {}) {
     json,
     text,
   };
+}
+
+async function fetchResponse(path, init = {}) {
+  return await fetch(`${baseUrl}${path}`, init);
 }
 
 async function postMcp(body, token) {
@@ -66,6 +71,15 @@ async function runPublicChecks() {
     protectedResource.json?.resource === diagnostics.json.mcp.endpoint,
     "Protected resource metadata does not match diagnostics endpoint.",
   );
+  if (diagnostics.json?.workos?.authKitDomain) {
+    assert(
+      Array.isArray(protectedResource.json?.authorization_servers) &&
+        protectedResource.json.authorization_servers.includes(
+          diagnostics.json.workos.authKitDomain,
+        ),
+      "Protected resource metadata is missing the configured AuthKit authorization server.",
+    );
+  }
   console.log("[pass] protected resource metadata");
 
   logStep("Checking authorization server metadata proxy");
@@ -75,7 +89,37 @@ async function runPublicChecks() {
     typeof authServer.json?.issuer === "string" || authServer.text.length > 0,
     "Authorization server metadata returned an empty payload.",
   );
+  if (diagnostics.json?.workos?.authKitDomain) {
+    assert(
+      authServer.json?.issuer === diagnostics.json.workos.authKitDomain,
+      "Authorization server metadata issuer does not match the configured AuthKit domain.",
+    );
+  }
   console.log("[pass] authorization server metadata proxy");
+
+  logStep("Checking standalone login handoff preserves external_auth_id");
+  const loginRedirect = await fetchResponse(
+    `/login?external_auth_id=${encodeURIComponent(standaloneExternalAuthId)}`,
+    {
+      redirect: "manual",
+    },
+  );
+  assert(
+    loginRedirect.status >= 300 && loginRedirect.status < 400,
+    `Expected login route redirect, got ${loginRedirect.status}.`,
+  );
+  const loginLocation = loginRedirect.headers.get("location") || "";
+  assert(loginLocation.length > 0, "Login route did not return a redirect location.");
+  const loginUrl = new URL(loginLocation);
+  assert(
+    loginUrl.searchParams.get("redirect_uri") === `${baseUrl}/auth/callback`,
+    "Login redirect is using an unexpected AuthKit callback URI.",
+  );
+  assert(
+    loginUrl.searchParams.get("state"),
+    "Login redirect is missing the AuthKit state parameter needed for standalone handoff.",
+  );
+  console.log("[pass] standalone login handoff");
 
   logStep("Checking unauthenticated MCP challenge");
   const unauthorized = await postMcp(
@@ -95,6 +139,10 @@ async function runPublicChecks() {
   assert(
     challenge.includes("resource_metadata="),
     "Missing resource metadata in WWW-Authenticate header.",
+  );
+  assert(
+    challenge.includes("/.well-known/oauth-protected-resource"),
+    "WWW-Authenticate challenge is missing the protected resource metadata URL.",
   );
   console.log("[pass] unauthenticated MCP challenge");
 }

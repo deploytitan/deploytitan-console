@@ -15,6 +15,12 @@ const commands = [
   ["help", "getting-started"],
 ];
 
+function assert(condition, message) {
+  if (!condition) {
+    throw new Error(message);
+  }
+}
+
 function runCli(args) {
   return new Promise((resolve, reject) => {
     const child = spawn("node", ["bin/deploytitan.mjs", ...args], {
@@ -60,6 +66,29 @@ async function main() {
     console.log(`\n[smoke] deploytitan ${args.join(" ")}`);
     const output = await runCli(args);
     console.log(output);
+
+    if (args[0] === "setup") {
+      assert(output.includes("MCP endpoint:"), "setup output is missing MCP endpoint.");
+      assert(
+        output.includes("Protected resource metadata:"),
+        "setup output is missing protected resource metadata.",
+      );
+      assert(
+        output.includes("Auth server metadata proxy:"),
+        "setup output is missing auth server metadata proxy.",
+      );
+    }
+
+    if (args[0] === "auth" && args[1] === "doctor") {
+      assert(
+        output.includes("WorkOS AuthKit domain:"),
+        "auth doctor output is missing AuthKit domain.",
+      );
+      assert(
+        output.includes("User-management issuer configured:"),
+        "auth doctor output is missing issuer configuration status.",
+      );
+    }
   }
 
   console.log("\n[done] CLI smoke checks completed successfully.");

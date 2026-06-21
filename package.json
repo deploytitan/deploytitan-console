@@ -13,6 +13,7 @@
     "lint": "eslint",
     "test": "vitest run",
     "test:smoke:mcp": "node scripts/smoke-mcp.mjs",
+    "test:smoke:mcp-login": "node scripts/smoke-mcp-login-e2e.mjs",
     "test:smoke:cli": "node scripts/smoke-cli.mjs",
     "test:e2e": "playwright test",
     "test:e2e:ui": "playwright test --ui",
