@@ -2,9 +2,11 @@ import {
   getDeployTitanMcpResourceUrl,
   getDeployTitanBaseUrl,
   getGithubAppInstallUrl,
+  getVercelConnectUrl,
   getWorkOSAuthKitDomain,
 } from "@/lib/workos";
 import { getAvailableBillingProviders, getDefaultBillingProvider } from "@/lib/billing";
+import { getVercelCallbackUrl, isVercelAppConfigured } from "@/lib/vercel";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -26,6 +28,11 @@ export async function GET(request: Request) {
     baseUrl: getDeployTitanBaseUrl() || origin,
     github: {
       installUrl: getGithubAppInstallUrl() || null,
+    },
+    vercel: {
+      connectUrl: getVercelConnectUrl(origin) || null,
+      callbackUrl: getVercelCallbackUrl() || null,
+      configured: isVercelAppConfigured(),
     },
     billing: {
       defaultProvider: getDefaultBillingProvider(),

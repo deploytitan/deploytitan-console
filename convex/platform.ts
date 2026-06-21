@@ -23,6 +23,23 @@ function getGithubAppInstallUrl() {
   return slug ? `https://github.com/apps/${slug}/installations/new` : "";
 }
 
+async function getProjectByPublicId(
+  ctx: ConvexCtx,
+  organizationId: Id<"organizations">,
+  publicId: string,
+) {
+  const project = await ctx.db
+    .query("projects")
+    .withIndex("by_public_id", (q) => q.eq("publicId", publicId))
+    .unique();
+
+  if (!project || project.orgId !== organizationId) {
+    return null;
+  }
+
+  return project;
+}
+
 async function getViewerByTokenIdentifier(
   ctx: ConvexCtx,
   tokenIdentifier: string,
@@ -286,6 +303,9 @@ export const getOnboardingGuide = query({
     const hasGrafana = integrations.some(
       (integration) => integration.kind === "grafana" && integration.status === "active",
     );
+    const hasVercel = integrations.some(
+      (integration) => integration.kind === "vercel" && integration.status === "active",
+    );
     const hasBilling = billingAccounts.some((account) =>
       ["active", "checkout_pending"].includes(account.status),
     );
@@ -326,6 +346,16 @@ export const getOnboardingGuide = query({
           hasGithub
             ? "GitHub is configured."
             : "Install the GitHub App and bind repositories to your project.",
+      },
+      {
+        key: "vercel",
+        label: "Connect Vercel",
+        status: hasVercel ? "complete" : projects.length > 0 ? "pending" : "blocked",
+        browserRequired: true,
+        description:
+          hasVercel
+            ? "Vercel deployment access is configured."
+            : "Authorize the DeployTitan Vercel app so releases can read deployment status and logs securely.",
       },
       {
         key: "slack",
@@ -385,6 +415,7 @@ export const getOnboardingGuide = query({
       githubInstallUrl: getGithubAppInstallUrl() || null,
       availableBrowserSteps: {
         github: getGithubAppInstallUrl() || null,
+        vercel: null,
         slack: null,
         grafana: null,
         billing: null,
@@ -461,5 +492,78 @@ export const completeBrowserContinuation = mutation({
     return {
       ok: true,
     };
+  },
+});
+
+export const upsertVercelIntegration = mutation({
+  args: {
+    projectPublicId: v.string(),
+    accessTokenCiphertext: v.string(),
+    refreshTokenCiphertext: v.optional(v.string()),
+    tokenScope: v.optional(v.string()),
+    accessTokenExpiresAt: v.optional(v.number()),
+    vercelUserId: v.string(),
+    vercelUserEmail: v.optional(v.string()),
+    vercelUserName: v.optional(v.string()),
+    vercelUserAvatarUrl: v.optional(v.string()),
+  },
+  handler: async (ctx, args) => {
+    const { viewer } = await requireViewer(ctx);
+    if (!viewer.defaultWorkosOrgId) {
+      throw new Error("No active organization.");
+    }
+
+    const organization = await getOrganizationByWorkosOrgId(ctx, viewer.defaultWorkosOrgId);
+    if (!organization) {
+      throw new Error("Organization not found.");
+    }
+
+    const project = await getProjectByPublicId(ctx, organization._id, args.projectPublicId);
+    if (!project) {
+      throw new Error("Project not found.");
+    }
+
+    const existing = await ctx.db
+      .query("projectIntegrations")
+      .withIndex("by_project_id_and_kind", (q) =>
+        q.eq("projectId", project._id).eq("kind", "vercel"),
+      )
+      .unique();
+
+    const timestamp = now();
+    if (existing) {
+      await ctx.db.patch(existing._id, {
+        status: "active",
+        vercelAccessTokenCiphertext: args.accessTokenCiphertext,
+        vercelRefreshTokenCiphertext: args.refreshTokenCiphertext,
+        vercelTokenScope: args.tokenScope,
+        vercelAccessTokenExpiresAt: args.accessTokenExpiresAt,
+        vercelUserId: args.vercelUserId,
+        vercelUserEmail: args.vercelUserEmail,
+        vercelUserName: args.vercelUserName,
+        vercelUserAvatarUrl: args.vercelUserAvatarUrl,
+        updatedAt: timestamp,
+      });
+
+      return (await ctx.db.get(existing._id))!;
+    }
+
+    const id = await ctx.db.insert("projectIntegrations", {
+      projectId: project._id,
+      kind: "vercel",
+      status: "active",
+      vercelAccessTokenCiphertext: args.accessTokenCiphertext,
+      vercelRefreshTokenCiphertext: args.refreshTokenCiphertext,
+      vercelTokenScope: args.tokenScope,
+      vercelAccessTokenExpiresAt: args.accessTokenExpiresAt,
+      vercelUserId: args.vercelUserId,
+      vercelUserEmail: args.vercelUserEmail,
+      vercelUserName: args.vercelUserName,
+      vercelUserAvatarUrl: args.vercelUserAvatarUrl,
+      createdAt: timestamp,
+      updatedAt: timestamp,
+    });
+
+    return (await ctx.db.get(id))!;
   },
 });

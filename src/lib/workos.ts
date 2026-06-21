@@ -56,3 +56,8 @@ export function getGithubAppInstallUrl() {
   const slug = process.env.GITHUB_APP_SLUG ?? "";
   return slug ? `https://github.com/apps/${slug}/installations/new` : "";
 }
+
+export function getVercelConnectUrl(baseUrl?: string) {
+  const origin = (baseUrl ?? getDeployTitanBaseUrl()).replace(/\/+$/, "");
+  return origin ? `${origin}/api/integrations/vercel/connect` : "";
+}
