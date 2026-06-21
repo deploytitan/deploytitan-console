@@ -80,6 +80,34 @@ async function getOrganizationByWorkosOrgId(ctx: ConvexCtx, workosOrgId: string)
     .unique();
 }
 
+async function listOrganizationsForViewer(
+  ctx: ConvexCtx,
+  userId: Id<"users">,
+) {
+  const memberships = await ctx.db
+    .query("memberships")
+    .withIndex("by_user_id", (q) => q.eq("userId", userId))
+    .take(100);
+
+  const organizations = (
+    await Promise.all(
+      memberships.map(async (membership) => {
+        const organization = await ctx.db.get(membership.organizationId);
+        return organization ? { organization, membership } : null;
+      }),
+    )
+  ).filter(
+    (
+      value,
+    ): value is {
+      organization: Doc<"organizations">;
+      membership: Doc<"memberships">;
+    } => value !== null,
+  );
+
+  return organizations;
+}
+
 async function getProjectIntegrations(ctx: ConvexCtx, projectId: Id<"projects">) {
   return await ctx.db
     .query("projectIntegrations")
@@ -270,16 +298,41 @@ export const getOnboardingGuide = query({
   args: {},
   handler: async (ctx) => {
     const { viewer } = await requireViewer(ctx);
-    const orgId = viewer.defaultWorkosOrgId ?? null;
-    const organization = orgId
-      ? await getOrganizationByWorkosOrgId(ctx, orgId)
-      : null;
-    const projects = organization
-      ? await ctx.db
+    const orgMemberships = await listOrganizationsForViewer(ctx, viewer._id);
+    const organizationEntries = await Promise.all(
+      orgMemberships.map(async ({ organization }) => {
+        const projects = await ctx.db
           .query("projects")
           .withIndex("by_org_id", (q) => q.eq("orgId", organization._id))
-          .take(20)
-      : [];
+          .take(20);
+
+        return {
+          organization,
+          projects,
+        };
+      }),
+    );
+
+    const defaultOrganization = viewer.defaultWorkosOrgId
+      ? await getOrganizationByWorkosOrgId(ctx, viewer.defaultWorkosOrgId)
+      : null;
+    const defaultEntry = defaultOrganization
+      ? organizationEntries.find(
+          (entry) => entry.organization._id === defaultOrganization._id,
+        ) ?? null
+      : null;
+    const firstEntryWithProject =
+      organizationEntries.find((entry) => entry.projects.length > 0) ?? null;
+    const selectedEntry =
+      (defaultEntry && defaultEntry.projects.length > 0
+        ? defaultEntry
+        : firstEntryWithProject) ??
+      defaultEntry ??
+      organizationEntries[0] ??
+      null;
+
+    const organization = selectedEntry?.organization ?? null;
+    const projects = selectedEntry?.projects ?? [];
 
     const integrations =
       projects.length > 0
@@ -316,6 +369,7 @@ export const getOnboardingGuide = query({
         label: "Authenticate",
         status: "complete",
         browserRequired: false,
+        optional: false,
         description: "You are signed in through WorkOS.",
       },
       {
@@ -323,6 +377,7 @@ export const getOnboardingGuide = query({
         label: "Create organization",
         status: organization ? "complete" : "pending",
         browserRequired: false,
+        optional: false,
         description: organization
           ? `Using ${organization.name}.`
           : "Create or select your organization.",
@@ -332,6 +387,7 @@ export const getOnboardingGuide = query({
         label: "Create project",
         status: projects.length > 0 ? "complete" : organization ? "pending" : "blocked",
         browserRequired: false,
+        optional: false,
         description:
           projects.length > 0
             ? `Primary project: ${projects[0].name}.`
@@ -342,6 +398,7 @@ export const getOnboardingGuide = query({
         label: "Connect GitHub",
         status: hasGithub ? "complete" : projects.length > 0 ? "pending" : "blocked",
         browserRequired: true,
+        optional: false,
         description:
           hasGithub
             ? "GitHub is configured."
@@ -349,9 +406,10 @@ export const getOnboardingGuide = query({
       },
       {
         key: "vercel",
-        label: "Connect Vercel",
+        label: "Connect Vercel (Optional)",
         status: hasVercel ? "complete" : projects.length > 0 ? "pending" : "blocked",
         browserRequired: true,
+        optional: true,
         description:
           hasVercel
             ? "Vercel deployment access is configured."
@@ -362,6 +420,7 @@ export const getOnboardingGuide = query({
         label: "Connect Slack",
         status: hasSlack ? "complete" : projects.length > 0 ? "pending" : "blocked",
         browserRequired: true,
+        optional: false,
         description:
           hasSlack
             ? "Slack approval delivery is configured."
@@ -372,6 +431,7 @@ export const getOnboardingGuide = query({
         label: "Connect Grafana",
         status: hasGrafana ? "complete" : projects.length > 0 ? "pending" : "blocked",
         browserRequired: true,
+        optional: false,
         description:
           hasGrafana
             ? "Grafana monitoring is configured."
@@ -382,6 +442,7 @@ export const getOnboardingGuide = query({
         label: "Choose plan",
         status: hasBilling ? "complete" : organization ? "pending" : "blocked",
         browserRequired: true,
+        optional: false,
         description:
           hasBilling
             ? "Billing is configured or checkout is in progress."
@@ -389,11 +450,13 @@ export const getOnboardingGuide = query({
       },
     ] as const;
 
-    const nextStep = steps.find((step) => step.status === "pending") ?? null;
+    const requiredSteps = steps.filter((step) => !step.optional);
+    const nextStep =
+      requiredSteps.find((step) => step.status === "pending") ?? null;
 
     return {
       status:
-        nextStep === null
+        requiredSteps.every((step) => step.status === "complete")
           ? "ready"
           : organization
             ? "in_progress"
