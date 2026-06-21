@@ -17,13 +17,20 @@ import { createOrganizationAction } from "@/actions/onboarding";
 
 export default function OnboardingPage() {
   const router = useRouter();
-  const { refreshAuth } = useAuth();
+  const { refreshAuth, user, organizationId, loading } = useAuth();
   const [orgName, setOrgName] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [billingPending, setBillingPending] = useState(false);
   const [isPending, startTransition] = useTransition();
-  const onboardingGuide = useQuery(api.platform.getOnboardingGuide, {});
-  const actor = useQuery(api.actors.getActorContext, {});
+  const authReady = !loading && Boolean(user);
+  const onboardingGuide = useQuery(
+    api.platform.getOnboardingGuide,
+    authReady ? {} : "skip",
+  );
+  const actor = useQuery(
+    api.actors.getActorContext,
+    authReady ? {} : "skip",
+  );
   const updateOnboardingProgress = useMutation(api.platform.updateOnboardingProgress);
 
   useEffect(() => {
@@ -33,6 +40,12 @@ export default function OnboardingPage() {
       setError(onboardingError.replace(/_/g, " "));
     }
   }, []);
+
+  useEffect(() => {
+    if (!loading && !user) {
+      router.replace("/login");
+    }
+  }, [loading, router, user]);
 
   useEffect(() => {
     if (onboardingGuide?.status === "ready" && onboardingGuide.projects[0]) {
@@ -134,6 +147,26 @@ export default function OnboardingPage() {
 
   const organizationMissing =
     onboardingGuide?.nextStep?.key === "organization" || !onboardingGuide?.organization;
+
+  if (loading || (user && !onboardingGuide)) {
+    return (
+      <div className="dark">
+        <main className="relative min-h-screen flex items-center justify-center bg-surface blueprint-grid">
+          <div className="corner-accent relative z-10 flex flex-col items-center gap-3 px-8 py-10">
+            <Loader2 className="size-5 animate-spin text-primary" />
+            <p className="font-mono text-[0.7rem] uppercase tracking-[0.18em] text-muted-foreground">
+              Syncing your workspace
+            </p>
+            {organizationId ? (
+              <p className="text-[0.75rem] text-muted-foreground">
+                Loading organization context for {organizationId}.
+              </p>
+            ) : null}
+          </div>
+        </main>
+      </div>
+    );
+  }
 
   return (
     <div className="dark">
