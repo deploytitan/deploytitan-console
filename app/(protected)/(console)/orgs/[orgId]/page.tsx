@@ -76,14 +76,22 @@ export default function OrgOverviewPage() {
                   {org?.name ?? "Organization"}
                 </h1>
               )}
-              <p className="mt-1.5 font-mono text-[9px] tracking-[0.08em] uppercase text-text-tertiary">
+                <p className="mt-1.5 font-mono text-[9px] tracking-[0.08em] uppercase text-text-tertiary">
                 {isLoading ? "—" : `${planLabel(org?.allocatedPlanId ?? null)} plan`}
               </p>
             </div>
-            <Button variant="default" size="sm" onClick={() => setDialogOpen(true)}>
-              <Plus className="size-3.5" />
-              New Project
-            </Button>
+            <div className="flex items-center gap-2">
+              <Link
+                href="/onboarding"
+                className="inline-flex items-center justify-center rounded-[4px] border border-border px-3 py-2 text-[12px] font-medium text-foreground transition-colors hover:bg-muted/60"
+              >
+                MCP Onboarding Guide
+              </Link>
+              <Button variant="default" size="sm" onClick={() => setDialogOpen(true)}>
+                <Plus className="size-3.5" />
+                New Project
+              </Button>
+            </div>
           </div>
         </div>
 

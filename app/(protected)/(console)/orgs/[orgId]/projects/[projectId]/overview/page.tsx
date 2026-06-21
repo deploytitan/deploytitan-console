@@ -73,9 +73,17 @@ export default function ProjectOverviewPage() {
   return (
     <div className="min-h-screen bg-background px-8 py-7">
       <div className="mb-8">
-        <p className="font-mono text-[9px] tracking-[0.08em] uppercase text-text-tertiary mb-2">
-          Project
-        </p>
+        <div className="mb-2 flex items-center justify-between gap-3">
+          <p className="font-mono text-[9px] tracking-[0.08em] uppercase text-text-tertiary">
+            Project
+          </p>
+          <Link
+            href="/onboarding"
+            className="inline-flex items-center justify-center rounded-[4px] border border-border px-3 py-2 text-[12px] font-medium text-foreground transition-colors hover:bg-muted/60"
+          >
+            MCP Onboarding Guide
+          </Link>
+        </div>
         <h1 className="text-[22px] font-semibold tracking-tight text-foreground">
           {isLoading ? "Loading..." : project?.name ?? "Project not found"}
         </h1>

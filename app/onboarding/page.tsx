@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, useTransition } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@workos-inc/authkit-nextjs/components";
 import { useMutation, useQuery } from "convex/react";
@@ -14,14 +15,17 @@ import {
 } from "lucide-react";
 import { BrandLogo } from "@/components/ui/BrandLogo";
 import { createOrganizationAction } from "@/actions/onboarding";
+import { useCreateProject } from "@/hooks/useCreateProject";
 
 export default function OnboardingPage() {
   const router = useRouter();
   const { refreshAuth, user, organizationId, loading } = useAuth();
   const [orgName, setOrgName] = useState("");
+  const [projectName, setProjectName] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [billingPending, setBillingPending] = useState(false);
   const [isPending, startTransition] = useTransition();
+  const [projectPending, setProjectPending] = useState(false);
   const authReady = !loading && Boolean(user);
   const onboardingGuide = useQuery(
     api.platform.getOnboardingGuide,
@@ -31,6 +35,7 @@ export default function OnboardingPage() {
     api.actors.getActorContext,
     authReady ? {} : "skip",
   );
+  const { create: createProject } = useCreateProject();
   const updateOnboardingProgress = useMutation(api.platform.updateOnboardingProgress);
 
   useEffect(() => {
@@ -143,6 +148,46 @@ export default function OnboardingPage() {
       ? `?token=${encodeURIComponent(continuation.continuationToken)}`
       : "";
     window.location.href = `/api/integrations/vercel/connect${continuationParam}`;
+  };
+
+  const openProject = (projectPublicId: string) => {
+    if (!onboardingGuide?.organization) {
+      return;
+    }
+
+    router.push(
+      `/orgs/${onboardingGuide.organization.workosOrgId}/projects/${projectPublicId}/overview`,
+    );
+  };
+
+  const handleCreateProject = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!onboardingGuide?.organization) {
+      setError("Create or select an organization first.");
+      return;
+    }
+
+    const trimmed = projectName.trim();
+    if (!trimmed) {
+      return;
+    }
+
+    setError(null);
+    setProjectPending(true);
+    try {
+      const project = await createProject({
+        orgId: onboardingGuide.organization.workosOrgId,
+        name: trimmed,
+      });
+      setProjectName("");
+      router.push(
+        `/orgs/${onboardingGuide.organization.workosOrgId}/projects/${project.publicId}/overview`,
+      );
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to create project.");
+    } finally {
+      setProjectPending(false);
+    }
   };
 
   const organizationMissing =
@@ -361,6 +406,67 @@ export default function OnboardingPage() {
                 </form>
               ) : (
                 <div className="mt-5 space-y-3 text-[0.75rem] text-muted-foreground">
+                  {onboardingGuide?.organization ? (
+                    <Link
+                      href={`/orgs/${onboardingGuide.organization.workosOrgId}`}
+                      className="inline-flex items-center gap-1 rounded-[2px] border border-border px-3 py-2 text-[0.78rem] font-medium text-foreground transition-colors hover:border-primary/35"
+                    >
+                      Go to UI dashboard
+                      <ArrowUpRight className="size-3.5" />
+                    </Link>
+                  ) : null}
+
+                  {onboardingGuide?.projects?.length ? (
+                    <div className="space-y-3">
+                      <p>Existing projects in this workspace:</p>
+                      <div className="space-y-2">
+                        {onboardingGuide.projects.map((project) => (
+                          <button
+                            key={project.publicId}
+                            type="button"
+                            onClick={() => openProject(project.publicId)}
+                            className="flex w-full items-center justify-between rounded-[4px] border border-border bg-surface-alt px-4 py-3 text-left transition-colors hover:border-primary/35"
+                          >
+                            <span className="font-mono text-[0.78rem] text-foreground">
+                              {project.name}
+                            </span>
+                            <span className="inline-flex items-center gap-1 text-[0.72rem] font-medium text-primary">
+                              Use this project
+                              <ArrowUpRight className="size-3.5" />
+                            </span>
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  ) : null}
+
+                  <form onSubmit={handleCreateProject} className="space-y-3">
+                    <p>
+                      {onboardingGuide?.projects?.length
+                        ? "Or create a new project for this organization:"
+                        : "Create your first project for this organization:"}
+                    </p>
+                    <div className="flex flex-col gap-2">
+                      <input
+                        type="text"
+                        value={projectName}
+                        onChange={(e) => setProjectName(e.target.value)}
+                        placeholder="release-control"
+                        autoComplete="off"
+                        spellCheck={false}
+                        disabled={projectPending}
+                        className="w-full rounded-[2px] border border-border bg-surface-alt px-4 py-3 text-[0.8125rem] text-foreground placeholder:text-text-disabled outline-none transition-all duration-200 focus:border-primary/40 focus:shadow-[0_0_0_3px_color-mix(in_srgb,var(--color-primary)_8%,transparent)] disabled:opacity-50"
+                      />
+                      <button
+                        type="submit"
+                        disabled={projectPending || !projectName.trim()}
+                        className="inline-flex items-center justify-center rounded-[2px] border border-border px-4 py-2 text-[0.78rem] font-medium text-foreground transition-colors hover:border-primary/35 disabled:cursor-not-allowed disabled:opacity-40"
+                      >
+                        {projectPending ? "Creating…" : "Create new project"}
+                      </button>
+                    </div>
+                  </form>
+
                   <p>
                     Continue in MCP with a prompt like:
                   </p>
