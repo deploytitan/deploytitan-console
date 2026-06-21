@@ -66,4 +66,3 @@ NEXT_PUBLIC_WORKOS_REDIRECT_URI=https://console.deploytitan.com/auth/callback
 - Repository and pull request data can be entered manually inside each project.
 - The GitHub install callback route is currently a placeholder while the new
   Convex-native integration path is rebuilt.
-
