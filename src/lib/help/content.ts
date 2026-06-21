@@ -98,6 +98,31 @@ If your organization has no active subscription, onboarding can still proceed un
 `.trim(),
   },
   {
+    slug: "vercel-connection",
+    title: "Vercel Connection",
+    summary:
+      "How DeployTitan connects to Vercel through a secure browser handoff instead of asking for pasted credentials.",
+    keywords: ["vercel", "oauth", "app", "deployments", "logs", "security"],
+    body: `
+DeployTitan should connect to Vercel through an app-style OAuth browser flow.
+
+- Start the connection from MCP or onboarding.
+- DeployTitan opens a secure browser handoff.
+- Vercel asks the user to approve access.
+- DeployTitan exchanges the authorization code server-side.
+- Resulting tokens are stored encrypted by DeployTitan.
+
+Users should not paste Vercel access tokens into MCP prompts.
+
+This connection is the foundation for:
+
+- deployment status lookup by commit
+- build log retrieval
+- runtime log retrieval
+- release-time health checks against Vercel-hosted apps
+`.trim(),
+  },
+  {
     slug: "troubleshooting",
     title: "Troubleshooting",
     summary:

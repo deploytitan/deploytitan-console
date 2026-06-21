@@ -27,6 +27,14 @@ export default function OnboardingPage() {
   const updateOnboardingProgress = useMutation(api.platform.updateOnboardingProgress);
 
   useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const onboardingError = params.get("error");
+    if (onboardingError) {
+      setError(onboardingError.replace(/_/g, " "));
+    }
+  }, []);
+
+  useEffect(() => {
     if (onboardingGuide?.status === "ready" && onboardingGuide.projects[0]) {
       const organization = onboardingGuide.organization;
       const project = onboardingGuide.projects[0];
@@ -110,6 +118,18 @@ export default function OnboardingPage() {
     if (onboardingGuide?.githubInstallUrl) {
       window.location.href = onboardingGuide.githubInstallUrl;
     }
+  };
+
+  const openVercelConnect = async () => {
+    const continuation = await updateOnboardingProgress({
+      currentStep: "vercel",
+      pendingBrowserStep: "vercel",
+    });
+
+    const continuationParam = continuation.continuationToken
+      ? `?token=${encodeURIComponent(continuation.continuationToken)}`
+      : "";
+    window.location.href = `/api/integrations/vercel/connect${continuationParam}`;
   };
 
   const organizationMissing =
@@ -212,6 +232,16 @@ export default function OnboardingPage() {
                             className="mt-3 inline-flex items-center gap-1 text-[0.75rem] font-medium text-primary"
                           >
                             Open GitHub installation
+                            <ArrowUpRight className="size-3.5" />
+                          </button>
+                        ) : null}
+                        {pending && step.key === "vercel" ? (
+                          <button
+                            type="button"
+                            onClick={() => void openVercelConnect()}
+                            className="mt-3 inline-flex items-center gap-1 text-[0.75rem] font-medium text-primary"
+                          >
+                            Connect Vercel app
                             <ArrowUpRight className="size-3.5" />
                           </button>
                         ) : null}

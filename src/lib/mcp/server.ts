@@ -10,6 +10,7 @@ import {
 import {
   getDeployTitanMcpResourceUrl,
   getDeployTitanBaseUrl,
+  getVercelConnectUrl,
   getWorkOSAuthKitDomain,
   getWorkOSUserManagementIssuerUrl,
   getWorkOSUserManagementJwksUrl,
@@ -276,7 +277,7 @@ const tools: ToolDefinition[] = [
     name: "open_browser_step",
     title: "Open browser step",
     description:
-      "Prepare a resumable browser continuation for GitHub, Slack, Grafana, or billing steps.",
+      "Prepare a resumable browser continuation for GitHub, Vercel, Slack, Grafana, or billing steps.",
     inputSchema: {
       type: "object",
       properties: {
@@ -305,6 +306,9 @@ const tools: ToolDefinition[] = [
       const browserTargets: Record<string, string> = {
         github: getDeployTitanBaseUrl()
           ? `${getDeployTitanBaseUrl()}/api/diagnostics`
+          : "",
+        vercel: getVercelConnectUrl()
+          ? `${getVercelConnectUrl()}${continuationSuffix}`
           : "",
         slack: `${baseUrl}/onboarding${continuationSuffix}`,
         grafana: `${baseUrl}/onboarding${continuationSuffix}`,

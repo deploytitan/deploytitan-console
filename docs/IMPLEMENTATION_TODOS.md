@@ -30,6 +30,7 @@
 ### Onboarding
 
 - Expand onboarding state machine to support GitHub, Slack, and Grafana completion callbacks
+- Extend onboarding with Vercel team/project selection after secure app connection
 - Add explicit skip/defer paths and onboarding blockers
 - Surface onboarding guide in the browser onboarding page
 - Add CLI-guided setup output driven from the onboarding guide API
@@ -52,3 +53,4 @@
 - Add environment-aware project topology and deploy-unit modeling
 - Add adapter boundaries for Jenkins, GitHub Actions deploys, Argo, and cloud-specific execution
 - Add auditable release decision policies and rule evaluation
+- Add Vercel deployment status and log retrieval MCP tools on top of the stored Vercel app connection
