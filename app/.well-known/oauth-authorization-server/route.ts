@@ -1,20 +1,11 @@
-import { getWorkOSAuthKitDomain } from "@/lib/workos";
+import { getWorkOSAuthorizationServerMetadataUrl } from "@/lib/workos";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 export async function GET() {
-  const authKitDomain = getWorkOSAuthKitDomain();
-  if (!authKitDomain) {
-    return Response.json(
-      {
-        error: "WORKOS_AUTHKIT_DOMAIN is not configured.",
-      },
-      { status: 500 },
-    );
-  }
-
-  const response = await fetch(`${authKitDomain}/.well-known/oauth-authorization-server`, {
+  const metadataUrl = getWorkOSAuthorizationServerMetadataUrl();
+  const response = await fetch(metadataUrl, {
     cache: "no-store",
   });
 

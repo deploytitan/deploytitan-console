@@ -20,8 +20,22 @@ export function getWorkOSUserManagementIssuerUrl() {
 }
 
 export function getWorkOSUserManagementJwksUrl() {
-  const clientId = process.env.WORKOS_CLIENT_ID ?? "";
+  const clientId =
+    process.env.WORKOS_CLIENT_ID ?? getWorkOSUserManagementIssuerId();
   return clientId ? `https://api.workos.com/sso/jwks/${clientId}` : "";
+}
+
+export function getWorkOSAuthorizationServerIssuer() {
+  return getWorkOSAuthKitDomain() || getWorkOSUserManagementIssuerUrl();
+}
+
+export function getWorkOSAuthorizationServerMetadataUrl() {
+  const authKitDomain = getWorkOSAuthKitDomain();
+  if (authKitDomain) {
+    return `${authKitDomain}/.well-known/oauth-authorization-server`;
+  }
+
+  return `${getWorkOSUserManagementIssuerUrl()}/.well-known/openid-configuration`;
 }
 
 export function getDeployTitanBaseUrl() {

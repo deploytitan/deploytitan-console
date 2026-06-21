@@ -440,32 +440,30 @@ export default function OnboardingPage() {
                     </div>
                   ) : null}
 
-                  <form onSubmit={handleCreateProject} className="space-y-3">
-                    <p>
-                      {onboardingGuide?.projects?.length
-                        ? "Or create a new project for this organization:"
-                        : "Create your first project for this organization:"}
-                    </p>
-                    <div className="flex flex-col gap-2">
-                      <input
-                        type="text"
-                        value={projectName}
-                        onChange={(e) => setProjectName(e.target.value)}
-                        placeholder="release-control"
-                        autoComplete="off"
-                        spellCheck={false}
-                        disabled={projectPending}
-                        className="w-full rounded-[2px] border border-border bg-surface-alt px-4 py-3 text-[0.8125rem] text-foreground placeholder:text-text-disabled outline-none transition-all duration-200 focus:border-primary/40 focus:shadow-[0_0_0_3px_color-mix(in_srgb,var(--color-primary)_8%,transparent)] disabled:opacity-50"
-                      />
-                      <button
-                        type="submit"
-                        disabled={projectPending || !projectName.trim()}
-                        className="inline-flex items-center justify-center rounded-[2px] border border-border px-4 py-2 text-[0.78rem] font-medium text-foreground transition-colors hover:border-primary/35 disabled:cursor-not-allowed disabled:opacity-40"
-                      >
-                        {projectPending ? "Creating…" : "Create new project"}
-                      </button>
-                    </div>
-                  </form>
+                  {onboardingGuide?.projects?.length === 0 ? (
+                    <form onSubmit={handleCreateProject} className="space-y-3">
+                      <p>Create your first project for this organization:</p>
+                      <div className="flex flex-col gap-2">
+                        <input
+                          type="text"
+                          value={projectName}
+                          onChange={(e) => setProjectName(e.target.value)}
+                          placeholder="release-control"
+                          autoComplete="off"
+                          spellCheck={false}
+                          disabled={projectPending}
+                          className="w-full rounded-[2px] border border-border bg-surface-alt px-4 py-3 text-[0.8125rem] text-foreground placeholder:text-text-disabled outline-none transition-all duration-200 focus:border-primary/40 focus:shadow-[0_0_0_3px_color-mix(in_srgb,var(--color-primary)_8%,transparent)] disabled:opacity-50"
+                        />
+                        <button
+                          type="submit"
+                          disabled={projectPending || !projectName.trim()}
+                          className="inline-flex items-center justify-center rounded-[2px] border border-border px-4 py-2 text-[0.78rem] font-medium text-foreground transition-colors hover:border-primary/35 disabled:cursor-not-allowed disabled:opacity-40"
+                        >
+                          {projectPending ? "Creating…" : "Create project"}
+                        </button>
+                      </div>
+                    </form>
+                  ) : null}
 
                   <p>
                     Continue in MCP with a prompt like:
