@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "deploytitan": {
+      "type": "http",
+      "url": "https://staging.console.deploytitan.com/api/mcp"
+    }
+  }
+}
