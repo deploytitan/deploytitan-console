@@ -1,4 +1,5 @@
-import { decodeState, encodeCode, getMcpCallbackUri } from "@/lib/mcp/oauthProxy";
+import { decodeState, encodeCode } from "@/lib/mcp/oauthProxy";
+import { getDeployTitanBaseUrl } from "@/lib/workos";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -35,9 +36,11 @@ export async function GET(request: Request) {
     );
   }
 
+  const origin = new URL(request.url).origin;
+  const baseUrl = getDeployTitanBaseUrl() || origin;
   const ourCode = encodeCode({
     workosCode: code,
-    deployTitanCallbackUri: getMcpCallbackUri(),
+    deployTitanCallbackUri: `${baseUrl}/api/mcp/auth/callback`,
   });
 
   const redirectTarget = new URL(decoded.clientRedirectUri);

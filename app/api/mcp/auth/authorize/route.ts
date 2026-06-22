@@ -1,8 +1,8 @@
 import {
   encodeState,
-  getMcpCallbackUri,
   getWorkOSAuthorizationEndpoint,
 } from "@/lib/mcp/oauthProxy";
+import { getDeployTitanBaseUrl, getWorkOSUserManagementIssuerId } from "@/lib/workos";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -29,9 +29,11 @@ export async function GET(request: Request) {
   }
 
   const internalState = encodeState({ clientRedirectUri, clientState });
-  const callbackUri = getMcpCallbackUri();
+  const origin = incoming.origin;
+  const baseUrl = getDeployTitanBaseUrl() || origin;
+  const callbackUri = `${baseUrl}/api/mcp/auth/callback`;
   const workosEndpoint = getWorkOSAuthorizationEndpoint();
-  const clientId = process.env.WORKOS_CLIENT_ID ?? "";
+  const clientId = process.env.WORKOS_CLIENT_ID || getWorkOSUserManagementIssuerId();
 
   const params = new URLSearchParams(incoming.searchParams);
   params.set("client_id", clientId);

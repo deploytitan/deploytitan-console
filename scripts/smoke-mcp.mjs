@@ -71,30 +71,32 @@ async function runPublicChecks() {
     protectedResource.json?.resource === diagnostics.json.mcp.endpoint,
     "Protected resource metadata does not match diagnostics endpoint.",
   );
-  if (diagnostics.json?.workos?.authKitDomain) {
-    assert(
-      Array.isArray(protectedResource.json?.authorization_servers) &&
-        protectedResource.json.authorization_servers.includes(
-          diagnostics.json.workos.authKitDomain,
-        ),
-      "Protected resource metadata is missing the configured AuthKit authorization server.",
-    );
-  }
+  assert(
+    Array.isArray(protectedResource.json?.authorization_servers) &&
+      protectedResource.json.authorization_servers.includes(baseUrl),
+    `Protected resource metadata authorization_servers must include the deploytitan base URL (${baseUrl}), not the upstream WorkOS domain.`,
+  );
   console.log("[pass] protected resource metadata");
 
   logStep("Checking authorization server metadata proxy");
   const authServer = await fetchJson("/.well-known/oauth-authorization-server");
   assert(authServer.response.ok, "Authorization server metadata proxy failed.");
   assert(
-    typeof authServer.json?.issuer === "string" || authServer.text.length > 0,
-    "Authorization server metadata returned an empty payload.",
+    typeof authServer.json?.issuer === "string" && authServer.json.issuer.length > 0,
+    "Authorization server metadata returned an empty or missing issuer.",
   );
-  if (diagnostics.json?.workos?.authKitDomain) {
-    assert(
-      authServer.json?.issuer === diagnostics.json.workos.authKitDomain,
-      "Authorization server metadata issuer does not match the configured AuthKit domain.",
-    );
-  }
+  assert(
+    authServer.json?.issuer === baseUrl,
+    `Authorization server metadata issuer must be the deploytitan base URL (${baseUrl}), got: ${authServer.json?.issuer}`,
+  );
+  assert(
+    authServer.json?.authorization_endpoint?.startsWith(baseUrl),
+    `authorization_endpoint must be an absolute URL under ${baseUrl}, got: ${authServer.json?.authorization_endpoint}`,
+  );
+  assert(
+    authServer.json?.token_endpoint?.startsWith(baseUrl),
+    `token_endpoint must be an absolute URL under ${baseUrl}, got: ${authServer.json?.token_endpoint}`,
+  );
   console.log("[pass] authorization server metadata proxy");
 
   logStep("Checking standalone login handoff preserves external_auth_id");
