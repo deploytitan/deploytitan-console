@@ -1,4 +1,4 @@
-import { getWorkOSAuthorizationServerMetadataUrl } from "@/lib/workos";
+import { getWorkOSAuthorizationServerMetadataUrl, getDeployTitanBaseUrl } from "@/lib/workos";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -10,12 +10,20 @@ export async function GET() {
   });
 
   const contentType = response.headers.get("content-type") ?? "application/json";
-  const body = await response.text();
-  return new Response(body, {
-    status: response.status,
-    headers: {
-      "Content-Type": contentType,
-      "Cache-Control": "no-store",
+  const metadata = contentType.includes("application/json")
+    ? await response.json()
+    : {};
+
+  const baseUrl = getDeployTitanBaseUrl();
+
+  return Response.json(
+    {
+      ...(metadata as Record<string, unknown>),
+      authorization_endpoint: `${baseUrl}/api/mcp/auth/authorize`,
+      token_endpoint: `${baseUrl}/api/mcp/auth/token`,
     },
-  });
+    {
+      headers: { "Cache-Control": "no-store" },
+    },
+  );
 }
