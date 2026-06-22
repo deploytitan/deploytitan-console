@@ -3,7 +3,7 @@ import { getWorkOSAuthorizationServerMetadataUrl, getDeployTitanBaseUrl } from "
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-export async function GET() {
+export async function GET(request: Request) {
   const metadataUrl = getWorkOSAuthorizationServerMetadataUrl();
   const response = await fetch(metadataUrl, {
     cache: "no-store",
@@ -14,11 +14,13 @@ export async function GET() {
     ? await response.json()
     : {};
 
-  const baseUrl = getDeployTitanBaseUrl();
+  const origin = new URL(request.url).origin;
+  const baseUrl = getDeployTitanBaseUrl() || origin;
 
   return Response.json(
     {
       ...(metadata as Record<string, unknown>),
+      issuer: baseUrl,
       authorization_endpoint: `${baseUrl}/api/mcp/auth/authorize`,
       token_endpoint: `${baseUrl}/api/mcp/auth/token`,
     },
