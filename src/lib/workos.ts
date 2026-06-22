@@ -1,32 +1,19 @@
-const DEFAULT_USER_MANAGEMENT_ISSUER_ID = "client_01KP99QCE9S1WNMVD5H5FHTMQJ";
-
 export function getWorkOSAuthKitDomain() {
-  return (
-    process.env.WORKOS_AUTHKIT_DOMAIN ??
-    process.env.NEXT_PUBLIC_WORKOS_AUTHKIT_DOMAIN ??
-    ""
-  ).replace(/\/+$/, "");
+  return (process.env.WORKOS_AUTHKIT_DOMAIN ?? "").replace(/\/+$/, "");
 }
 
-export function getWorkOSUserManagementIssuerId() {
-  return (
-    process.env.WORKOS_USER_MANAGEMENT_ISSUER_ID ??
-    DEFAULT_USER_MANAGEMENT_ISSUER_ID
-  );
+export function getWorkOsClientId() {
+  return process.env.WORKOS_CLIENT_ID;
 }
 
 export function getWorkOSUserManagementIssuerUrl() {
-  return `https://api.workos.com/user_management/${getWorkOSUserManagementIssuerId()}`;
+  return `https://api.workos.com/user_management/${getWorkOsClientId()}`;
 }
 
 export function getWorkOSUserManagementJwksUrl() {
-  const clientId =
-    process.env.WORKOS_CLIENT_ID ?? getWorkOSUserManagementIssuerId();
+  const clientId = getWorkOsClientId();
+  if (!clientId) return "";
   return clientId ? `https://api.workos.com/sso/jwks/${clientId}` : "";
-}
-
-export function getWorkOSAuthorizationServerIssuer() {
-  return getWorkOSAuthKitDomain() || getWorkOSUserManagementIssuerUrl();
 }
 
 export function getWorkOSAuthorizationServerMetadataUrl() {

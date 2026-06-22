@@ -4,8 +4,12 @@ import {
   getGithubAppInstallUrl,
   getVercelConnectUrl,
   getWorkOSAuthKitDomain,
+  getWorkOsClientId,
 } from "@/lib/workos";
-import { getAvailableBillingProviders, getDefaultBillingProvider } from "@/lib/billing";
+import {
+  getAvailableBillingProviders,
+  getDefaultBillingProvider,
+} from "@/lib/billing";
 import { getVercelCallbackUrl, isVercelAppConfigured } from "@/lib/vercel";
 
 export const runtime = "nodejs";
@@ -23,7 +27,7 @@ export async function GET(request: Request) {
     },
     workos: {
       authKitDomain: getWorkOSAuthKitDomain() || null,
-      userManagementIssuerConfigured: Boolean(process.env.WORKOS_CLIENT_ID),
+      workosClientId: Boolean(getWorkOsClientId()),
     },
     baseUrl: getDeployTitanBaseUrl() || origin,
     github: {

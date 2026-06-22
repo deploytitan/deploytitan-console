@@ -2,7 +2,7 @@ import {
   encodeState,
   getWorkOSAuthorizationEndpoint,
 } from "@/lib/mcp/oauthProxy";
-import { getDeployTitanBaseUrl, getWorkOSUserManagementIssuerId } from "@/lib/workos";
+import { getDeployTitanBaseUrl, getWorkOsClientId } from "@/lib/workos";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -23,7 +23,10 @@ export async function GET(request: Request) {
 
   if (!clientRedirectUri || !isAllowedRedirectUri(clientRedirectUri)) {
     return new Response(
-      JSON.stringify({ error: "invalid_request", error_description: "redirect_uri must be a localhost URI" }),
+      JSON.stringify({
+        error: "invalid_request",
+        error_description: "redirect_uri must be a localhost URI",
+      }),
       { status: 400, headers: { "Content-Type": "application/json" } },
     );
   }
@@ -33,10 +36,18 @@ export async function GET(request: Request) {
   const baseUrl = getDeployTitanBaseUrl() || origin;
   const callbackUri = `${baseUrl}/api/mcp/auth/callback`;
   const workosEndpoint = getWorkOSAuthorizationEndpoint();
-  const clientId = process.env.WORKOS_CLIENT_ID || getWorkOSUserManagementIssuerId();
+  const clientId = getWorkOsClientId();
+  console.log("mcp.auth.authorize", {
+    internalState,
+    origin,
+    baseUrl,
+    callbackUri,
+    workosEndpoint,
+    clientId,
+  });
 
   const params = new URLSearchParams(incoming.searchParams);
-  params.set("client_id", clientId);
+  params.set("client_id", clientId || "client_id_not_found");
   params.set("redirect_uri", callbackUri);
   params.set("state", internalState);
 
