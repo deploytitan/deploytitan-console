@@ -7,7 +7,9 @@ export function getWorkOsClientId() {
 }
 
 export function getWorkOSUserManagementIssuerUrl() {
-  return `https://api.workos.com/user_management/${getWorkOsClientId()}`;
+  const clientId = getWorkOsClientId();
+  if (!clientId) return "";
+  return `https://api.workos.com/user_management/${clientId}`;
 }
 
 export function getWorkOSUserManagementJwksUrl() {
